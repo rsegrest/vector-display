@@ -98,7 +98,7 @@ Two separate things brighten vertices:
 1. **Endpoint dwell:** a deliberate highlight, controlled by `endpointBrightness`.
 2. **Overlap:** each segment draws a rounded end, so at a joint two segments' ends and glows cover the same pixels and additive blending doubles them. Bloom makes this more visible.
 
-To control overlap, each fragment also measures its distance to the connected previous and next segments. **The closest segment owns the pixel**, and the others contribute only `jointOverlap` there (ties go to the previous segment, so exactly one segment owns every pixel). At `1` this matches plain additive drawing; at `0` joints are seamless, with no gaps or seams. Measured on the demo scene, joint overlap 0 lights exactly the same pixels as 1 with about 13% less total brightness, all of it removed from joints.
+To control overlap, each fragment also measures its distance to the connected previous and next segments. **The closest segment owns the pixel**, and the others contribute only `jointOverlap` there (ties go to the previous segment, so exactly one segment owns every pixel). At `1` this matches plain additive drawing; at `0` no dots, gaps or seams were visible at the demo's joints. Measured on one demo frame, joint overlap 0 lit exactly the same pixels as 1, with about 13% less total brightness, which is consistent with removing only the doubled brightness at joints.
 
 Segments that aren't connected (for example two different asteroids crossing) still add up, which is authentic for a vector monitor.
 
