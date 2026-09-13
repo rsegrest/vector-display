@@ -123,7 +123,7 @@ previous phosphor ──fade (0.5^(elapsed/halfLife))──▶ next phosphor ◀
                                                         │
                                    half-res blur (horizontal, vertical) × N ──▶ bloom
                                                         │
-                  canvas ◀── composite: (phosphor + bloom × strength) × flicker, tone-mapped 1 − e^(−x·exposure)
+                  canvas ◀── composite: tone-map (phosphor + bloom × strength) as 1 − e^(−x·exposure), then × flicker
 ```
 
 | Setting | Default | Effect |
@@ -131,11 +131,13 @@ previous phosphor ──fade (0.5^(elapsed/halfLife))──▶ next phosphor ◀
 | `persistenceHalfLifeMilliseconds` | 40 | How long trails linger. The fade depends on elapsed time, so it looks the same at 60 Hz and 120 Hz |
 | `bloomStrength` / `bloomBlurIterations` | 1.2 / 2 | Wide glow around bright lines |
 | `exposure` | 1.6 | Highlight rolloff; overlapping beams saturate smoothly instead of clipping |
-| `flickerAmount` | 0.04 | Small random brightness variation per frame |
+| `flickerAmount` / `flickerFrequencyHz` | 0.08 / 15 | Smooth random dips in brightness: depth as a fraction of the displayed image, and how often a new level is chosen |
 
 - **Storage:** half-float (`RGBA16F`) targets when `EXT_color_buffer_float` is available. Otherwise 8-bit, with a small subtraction each frame so faint trails still fade out completely.
 - **Frame gaps:** elapsed time is clamped to 100 ms, so switching tabs doesn't wipe or freeze the trails.
 - **Resizing:** targets are recreated automatically when the drawing buffer size changes.
+- **Flicker:** smoothly interpolated random levels (`FlickerGenerator`), applied *after* tone mapping. The first version varied brightness randomly every frame before tone mapping and was barely visible: bright pixels sit in the compressed part of the tone curve, and per-frame changes at 60–120 Hz blur into a steady image. Measured on the demo, 50% depth at 5 Hz dims the displayed image to 0.67 of its peak within a second, with no frame-to-frame jump above 4.2%.
+- **Photosensitivity:** strong full-screen brightness changes around 3–30 Hz can trigger photosensitive seizures. The default depth is subtle (8%), and the demo caps the slider at 50%. Apps exposing flicker to players should keep it subtle or let players turn it off.
 
 ## 6. Other design decisions
 
@@ -183,7 +185,7 @@ npm install
 npm run dev   # http://localhost:5173 (or the port Vite prints)
 ```
 
-Switch **Renderer** and **Asteroids** in the header and read the live FPS. The **Vertex dwell** and **Joint overlap** sliders (both WebGL modes) and the **Persistence**, **Bloom** and **Flicker** sliders (phosphor mode) adjust the look live.
+Switch **Renderer** and **Asteroids** in the header and read the live FPS. The **Vertex dwell** and **Joint overlap** sliders (both WebGL modes) and the **Persistence**, **Bloom**, **Flicker** and **Flicker Hz** sliders (phosphor mode) adjust the look live.
 
 For scripted runs, open the browser console:
 

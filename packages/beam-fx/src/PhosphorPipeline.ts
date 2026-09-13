@@ -1,6 +1,7 @@
 import type { DisplayList } from "@rsegrest/vector-display";
 import type { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
 import { BLUR_FRAGMENT_SHADER, COMPOSITE_FRAGMENT_SHADER, DECAY_FRAGMENT_SHADER } from "./effectShaders.js";
+import { FlickerGenerator } from "./FlickerGenerator.js";
 import { FullscreenPass } from "./FullscreenPass.js";
 import { RenderTarget } from "./RenderTarget.js";
 
@@ -10,8 +11,11 @@ export interface PhosphorSettings {
     readonly bloomStrength: number;
     readonly bloomBlurIterations: number;
     readonly exposure: number;
-    // 0 disables flicker; 0.05 varies overall brightness by up to ±2.5% per frame.
+    // Deepest brightness dip as a fraction of the displayed image: 0 disables flicker, 0.3 dims by up to 30%.
+    // Strong full-screen flicker around 3–30 Hz can trigger photosensitive seizures; keep it subtle by default.
     readonly flickerAmount: number;
+    // How often the flicker moves to a new random brightness level.
+    readonly flickerFrequencyHz: number;
 }
 
 export const DEFAULT_PHOSPHOR_SETTINGS: PhosphorSettings = {
@@ -19,7 +23,8 @@ export const DEFAULT_PHOSPHOR_SETTINGS: PhosphorSettings = {
     bloomStrength: 1.2,
     bloomBlurIterations: 2,
     exposure: 1.6,
-    flickerAmount: 0.04,
+    flickerAmount: 0.08,
+    flickerFrequencyHz: 15,
 };
 
 const MAXIMUM_FRAME_GAP_MILLISECONDS = 100;
@@ -38,6 +43,7 @@ export class PhosphorPipeline {
     private readonly decayPass: FullscreenPass;
     private readonly blurPass: FullscreenPass;
     private readonly compositePass: FullscreenPass;
+    private readonly flickerGenerator = new FlickerGenerator();
     private settings: PhosphorSettings = DEFAULT_PHOSPHOR_SETTINGS;
     private latestPhosphor: RenderTarget | null = null;
     private scratchPhosphor: RenderTarget | null = null;
@@ -62,11 +68,12 @@ export class PhosphorPipeline {
     }
 
     public renderFrame(displayList: DisplayList, elapsedMilliseconds: number): void {
+        const frameMilliseconds = Math.min(Math.max(elapsedMilliseconds, 0), MAXIMUM_FRAME_GAP_MILLISECONDS);
         this.resizeTargetsToDrawingBuffer();
-        this.fadePreviousFrame(elapsedMilliseconds);
+        this.fadePreviousFrame(frameMilliseconds);
         this.drawBeams(displayList);
         this.blurIntoBloom();
-        this.compositeToCanvas();
+        this.compositeToCanvas(this.calculateFlickerBrightness(frameMilliseconds));
     }
 
     public dispose(): void {
@@ -92,12 +99,11 @@ export class PhosphorPipeline {
     }
 
     // Writes the faded previous frame into the scratch target, which then becomes the latest frame.
-    private fadePreviousFrame(elapsedMilliseconds: number): void {
+    private fadePreviousFrame(frameMilliseconds: number): void {
         const gl = this.gl;
         const previous = this.latestPhosphor!;
         const next = this.scratchPhosphor!;
-        const clampedElapsed = Math.min(Math.max(elapsedMilliseconds, 0), MAXIMUM_FRAME_GAP_MILLISECONDS);
-        const decay = Math.pow(0.5, clampedElapsed / this.settings.persistenceHalfLifeMilliseconds);
+        const decay = Math.pow(0.5, frameMilliseconds / this.settings.persistenceHalfLifeMilliseconds);
         next.bindForDrawing();
         gl.disable(gl.BLEND);
         this.decayPass.use();
@@ -139,9 +145,14 @@ export class PhosphorPipeline {
         this.blurPass.draw();
     }
 
-    private compositeToCanvas(): void {
+    private calculateFlickerBrightness(frameMilliseconds: number): number {
+        const flickerLevel = this.flickerGenerator.advance(frameMilliseconds, this.settings.flickerFrequencyHz);
+        const flickerDepth = Math.min(Math.max(this.settings.flickerAmount, 0), 1);
+        return 1 - flickerDepth * flickerLevel;
+    }
+
+    private compositeToCanvas(flickerBrightness: number): void {
         const gl = this.gl;
-        const flickerBrightness = 1 + (Math.random() - 0.5) * this.settings.flickerAmount;
         const hasBloom = this.settings.bloomBlurIterations > 0;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);

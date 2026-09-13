@@ -20,6 +20,7 @@ const asteroidCountSelect = requireElement<HTMLSelectElement>("asteroid-count");
 const persistenceSlider = requireElement<HTMLInputElement>("persistence");
 const bloomSlider = requireElement<HTMLInputElement>("bloom");
 const flickerSlider = requireElement<HTMLInputElement>("flicker");
+const flickerFrequencySlider = requireElement<HTMLInputElement>("flicker-frequency");
 const vertexDwellSlider = requireElement<HTMLInputElement>("vertex-dwell");
 const jointOverlapSlider = requireElement<HTMLInputElement>("joint-overlap");
 const statsElement = requireElement<HTMLDivElement>("stats");
@@ -164,6 +165,9 @@ bloomSlider.addEventListener("input", () => {
 });
 flickerSlider.addEventListener("input", () => {
     webglRenderer.setPhosphorSettings({ flickerAmount: Number(flickerSlider.value) / 100 });
+});
+flickerFrequencySlider.addEventListener("input", () => {
+    webglRenderer.setPhosphorSettings({ flickerFrequencyHz: Number(flickerFrequencySlider.value) });
 });
 vertexDwellSlider.addEventListener("input", () => {
     webglRenderer.setJointStyle({ endpointBrightness: Number(vertexDwellSlider.value) / 100 });

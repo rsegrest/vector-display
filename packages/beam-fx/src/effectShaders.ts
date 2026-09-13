@@ -40,7 +40,7 @@ out vec4 outColor;
 void main() {
     vec3 color = texture(u_phosphor, v_textureCoordinate).rgb
         + texture(u_bloom, v_textureCoordinate).rgb * u_bloomStrength;
-    color *= u_flickerBrightness;
-    outColor = vec4(1.0 - exp(-color * u_exposure), 1.0);
+    // Flicker scales the tone-mapped result, so its depth matches what the viewer sees.
+    outColor = vec4((1.0 - exp(-color * u_exposure)) * u_flickerBrightness, 1.0);
 }
 `;
