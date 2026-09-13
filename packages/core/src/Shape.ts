@@ -1,4 +1,4 @@
-import type { Polyline } from "./geometryTypes.js";
+import type { Polyline, ShapeGeometry } from "./geometryTypes.js";
 
 export const FLOATS_PER_SHAPE_SEGMENT = 4;
 export const NO_NEIGHBOR_SEGMENT = -1;
@@ -8,7 +8,7 @@ interface ShapeBuffers {
     readonly neighborIndices: number[];
 }
 
-export class Shape {
+export class Shape implements ShapeGeometry {
     public readonly segmentCoordinates: Float32Array;
     // Two entries per segment: the index of the connected previous and next segment, or NO_NEIGHBOR_SEGMENT.
     public readonly segmentNeighbors: Int32Array;

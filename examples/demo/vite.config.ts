@@ -7,5 +7,11 @@ export default defineConfig({
     },
     build: {
         target: "es2022",
+        rollupOptions: {
+            input: {
+                benchmark: "index.html",
+                fontAnd3d: "font-and-3d.html",
+            },
+        },
     },
 });

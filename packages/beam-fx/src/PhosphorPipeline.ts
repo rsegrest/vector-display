@@ -1,6 +1,6 @@
 import type { DisplayList } from "@rsegrest/vector-display";
 import type { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
-import { BLUR_FRAGMENT_SHADER, COMPOSITE_FRAGMENT_SHADER, DECAY_FRAGMENT_SHADER } from "./effectShaders.js";
+import { BLUR_FRAGMENT_SHADER, COMPOSITE_FRAGMENT_SHADER, PERSISTENCE_FRAGMENT_SHADER } from "./effectShaders.js";
 import { FlickerGenerator } from "./FlickerGenerator.js";
 import { FullscreenPass } from "./FullscreenPass.js";
 import { RenderTarget } from "./RenderTarget.js";
@@ -40,20 +40,21 @@ export class PhosphorPipeline {
     private readonly gl: WebGL2RenderingContext;
     private readonly renderer: WebGLVectorRenderer;
     private readonly usesFloatStorage: boolean;
-    private readonly decayPass: FullscreenPass;
+    private readonly persistencePass: FullscreenPass;
     private readonly blurPass: FullscreenPass;
     private readonly compositePass: FullscreenPass;
     private readonly flickerGenerator = new FlickerGenerator();
     private settings: PhosphorSettings = DEFAULT_PHOSPHOR_SETTINGS;
     private latestPhosphor: RenderTarget | null = null;
     private scratchPhosphor: RenderTarget | null = null;
+    private currentBeams: RenderTarget | null = null;
     private bloomTargets: [RenderTarget, RenderTarget] | null = null;
 
     constructor(renderer: WebGLVectorRenderer, settings: Partial<PhosphorSettings> = {}) {
         this.renderer = renderer;
         this.gl = renderer.gl;
         this.usesFloatStorage = this.gl.getExtension("EXT_color_buffer_float") !== null;
-        this.decayPass = new FullscreenPass(this.gl, DECAY_FRAGMENT_SHADER);
+        this.persistencePass = new FullscreenPass(this.gl, PERSISTENCE_FRAGMENT_SHADER);
         this.blurPass = new FullscreenPass(this.gl, BLUR_FRAGMENT_SHADER);
         this.compositePass = new FullscreenPass(this.gl, COMPOSITE_FRAGMENT_SHADER);
         this.setSettings(settings);
@@ -70,15 +71,15 @@ export class PhosphorPipeline {
     public renderFrame(displayList: DisplayList, elapsedMilliseconds: number): void {
         const frameMilliseconds = Math.min(Math.max(elapsedMilliseconds, 0), MAXIMUM_FRAME_GAP_MILLISECONDS);
         this.resizeTargetsToDrawingBuffer();
-        this.fadePreviousFrame(frameMilliseconds);
-        this.drawBeams(displayList);
+        this.drawBeamsIntoCurrentFrame(displayList);
+        this.combineWithFadedPreviousFrame(frameMilliseconds);
         this.blurIntoBloom();
         this.compositeToCanvas(this.calculateFlickerBrightness(frameMilliseconds));
     }
 
     public dispose(): void {
         this.disposeTargets();
-        this.decayPass.dispose();
+        this.persistencePass.dispose();
         this.blurPass.dispose();
         this.compositePass.dispose();
     }
@@ -90,6 +91,7 @@ export class PhosphorPipeline {
         this.disposeTargets();
         this.latestPhosphor = this.createTarget({ width, height });
         this.scratchPhosphor = this.createTarget({ width, height });
+        this.currentBeams = this.createTarget({ width, height });
         const bloomSize = { width: Math.max(1, width >> 1), height: Math.max(1, height >> 1) };
         this.bloomTargets = [this.createTarget(bloomSize), this.createTarget(bloomSize)];
     }
@@ -98,27 +100,34 @@ export class PhosphorPipeline {
         return new RenderTarget(this.gl, { ...size, usesFloatStorage: this.usesFloatStorage });
     }
 
-    // Writes the faded previous frame into the scratch target, which then becomes the latest frame.
-    private fadePreviousFrame(frameMilliseconds: number): void {
+    private drawBeamsIntoCurrentFrame(displayList: DisplayList): void {
+        const gl = this.gl;
+        this.currentBeams!.bindForDrawing();
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        this.renderer.drawDisplayList(displayList);
+    }
+
+    // Keeps the brighter of this frame's beams and the faded trail. Adding them instead would make anything that
+    // stays still build up to 1 / (1 - decay) times its brightness, which grows with refresh rate and persistence.
+    private combineWithFadedPreviousFrame(frameMilliseconds: number): void {
         const gl = this.gl;
         const previous = this.latestPhosphor!;
         const next = this.scratchPhosphor!;
         const decay = Math.pow(0.5, frameMilliseconds / this.settings.persistenceHalfLifeMilliseconds);
         next.bindForDrawing();
         gl.disable(gl.BLEND);
-        this.decayPass.use();
+        this.persistencePass.use();
         this.bindTexture(previous.texture, 0);
-        gl.uniform1i(this.decayPass.getUniformLocation("u_previousFrame"), 0);
-        gl.uniform1f(this.decayPass.getUniformLocation("u_decay"), decay);
-        gl.uniform1f(this.decayPass.getUniformLocation("u_decayFloor"), this.usesFloatStorage ? 0 : EIGHT_BIT_DECAY_FLOOR);
-        this.decayPass.draw();
+        this.bindTexture(this.currentBeams!.texture, 1);
+        gl.uniform1i(this.persistencePass.getUniformLocation("u_previousFrame"), 0);
+        gl.uniform1i(this.persistencePass.getUniformLocation("u_currentBeams"), 1);
+        gl.uniform1f(this.persistencePass.getUniformLocation("u_decay"), decay);
+        gl.uniform1f(this.persistencePass.getUniformLocation("u_decayFloor"), this.usesFloatStorage ? 0 : EIGHT_BIT_DECAY_FLOOR);
+        this.persistencePass.draw();
+        this.bindTexture(null, 1);
         this.latestPhosphor = next;
         this.scratchPhosphor = previous;
-    }
-
-    private drawBeams(displayList: DisplayList): void {
-        this.latestPhosphor!.bindForDrawing();
-        this.renderer.drawDisplayList(displayList);
     }
 
     private blurIntoBloom(): void {
@@ -178,9 +187,11 @@ export class PhosphorPipeline {
     private disposeTargets(): void {
         this.latestPhosphor?.dispose();
         this.scratchPhosphor?.dispose();
+        this.currentBeams?.dispose();
         this.bloomTargets?.forEach((target) => target.dispose());
         this.latestPhosphor = null;
         this.scratchPhosphor = null;
+        this.currentBeams = null;
         this.bloomTargets = null;
     }
 }

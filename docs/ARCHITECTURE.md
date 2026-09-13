@@ -1,6 +1,6 @@
 # vector-display architecture
 
-**Status:** prototype (2026-09-13). Three packages and a benchmark app work end to end; APIs are expected to change before a first publish.
+**Status:** prototype (2026-09-13). Five packages and a two-page demo app work end to end; APIs are expected to change before a first publish.
 
 ## 1. Goals
 
@@ -14,13 +14,13 @@
 One repository (npm workspaces) that publishes several small packages. The packages depend on each other through small interfaces, not class inheritance.
 
 ```
-@rsegrest/vector-display            core: shapes + per-frame display list (no rendering, runs in Node)
-        ▲
-@rsegrest/vector-display-webgl      WebGL2 renderer: draws a display list in one draw call
-        ▲
-@rsegrest/vector-display-beam-fx    phosphor persistence, bloom, flicker (wraps the renderer)
+                    @rsegrest/vector-display   core: shapes + per-frame display list (no rendering, runs in Node)
+                     ▲          ▲          ▲
+@rsegrest/vector-display-webgl  │  @rsegrest/vector-display-3d     wireframes + perspective (uses es-vector-math)
+           ▲                    │
+@rsegrest/vector-display-beam-fx   @rsegrest/vector-display-font   Atari-style stroke font + text layout
 
-examples/asteroids-benchmark        demo + benchmark (uses es-vector-math, motion-and-tween, p5)
+examples/demo                   renderer benchmark + font & 3D showcase (uses es-vector-math, motion-and-tween, p5)
 ```
 
 | Package | Status | Responsibility | Depends on |
@@ -28,6 +28,8 @@ examples/asteroids-benchmark        demo + benchmark (uses es-vector-math, motio
 | `@rsegrest/vector-display` | Prototype | `Shape` (static line geometry) and `DisplayList` (transformed beam segments for one frame) | nothing |
 | `@rsegrest/vector-display-webgl` | Prototype | `WebGLVectorRenderer`: uploads a display list and draws it with additive blending | core |
 | `@rsegrest/vector-display-beam-fx` | Prototype | `PhosphorPipeline`: fade the previous frame, draw beams, bloom, composite | core, webgl |
+| `@rsegrest/vector-display-font` | Prototype | `VectorFont`: Atari-style stroke glyphs and text layout into a display list | core |
+| `@rsegrest/vector-display-3d` | Prototype | `WireframeModel`, `WireframeProjector`: perspective projection with near-plane clipping, built on es-vector-math | core, es-vector-math |
 | `@rsegrest/vector-display-svg` | Planned (phase 3) | Convert SVG paths into `Shape`s, porting `SVGLoader`/`SVGFactory` from asteroids-p5-ts | core |
 | `@rsegrest/vector-display-p5` | Planned (phase 3) | Use the renderer from p5 sketches | webgl |
 
@@ -56,7 +58,7 @@ The beam's drawing program for one frame, in draw order. It's reused every frame
 | Method | Purpose |
 | --- | --- |
 | `setColor({ red, green, blue })` | Current beam color, like a vector monitor's color register |
-| `addShape(shape, { x, y, rotation, scale, intensity })` | Transforms the shape's segments into world space and appends them |
+| `addShape(shape, { x, y, rotation, scale, intensity })` | Transforms the shape's segments into world space and appends them. Accepts any `ShapeGeometry` (`segmentCoordinates`, `segmentNeighbors`, `segmentCount`), including geometry rebuilt every frame. Use `SCREEN_SPACE_PLACEMENT` for geometry already in world coordinates |
 | `getSegmentData()` | Packed `Float32Array` view, **14 floats per segment**: `x0, y0, x1, y1`, previous neighbor's start `x, y`, next neighbor's end `x, y`, `red, green, blue, intensity`, `hasPrevious, hasNext` |
 | `clear()` / `segmentCount` | Frame management |
 
@@ -119,8 +121,9 @@ If profiling a real game shows CPU transform or upload time dominating, the next
 `PhosphorPipeline.renderFrame(displayList, elapsedMilliseconds)` runs these passes each frame:
 
 ```
-previous phosphor ──fade (0.5^(elapsed/halfLife))──▶ next phosphor ◀── beams drawn additively
-                                                        │
+beams (drawn additively into a cleared target) ──┐
+                                                  ├─ keep the brighter per pixel ─▶ next phosphor
+previous phosphor ── fade by 0.5^(elapsed/halfLife) ┘                                   │
                                    half-res blur (horizontal, vertical) × N ──▶ bloom
                                                         │
                   canvas ◀── composite: tone-map (phosphor + bloom × strength) as 1 − e^(−x·exposure), then × flicker
@@ -133,11 +136,33 @@ previous phosphor ──fade (0.5^(elapsed/halfLife))──▶ next phosphor ◀
 | `exposure` | 1.6 | Highlight rolloff; overlapping beams saturate smoothly instead of clipping |
 | `flickerAmount` / `flickerFrequencyHz` | 0.08 / 15 | Smooth random dips in brightness: depth as a fraction of the displayed image, and how often a new level is chosen |
 
+- **Why "keep the brighter" instead of adding:** the first version added new beams on top of the faded previous frame. Anything that stayed still then built up to 1 ÷ (1 − fade) times its brightness: about 4× at 60 Hz and about 6× at 120 Hz with the default persistence, which blew out text under bloom. Keeping the brighter of the two shows static content at its true brightness at any refresh rate, while trails fade exactly as before. Measured on the demo, re-rendering one frame 1, 10 and 40 times gave 1.00×, 1.02× and 1.01× total brightness (the variation is flicker). This costs one extra full-resolution render target.
 - **Storage:** half-float (`RGBA16F`) targets when `EXT_color_buffer_float` is available. Otherwise 8-bit, with a small subtraction each frame so faint trails still fade out completely.
 - **Frame gaps:** elapsed time is clamped to 100 ms, so switching tabs doesn't wipe or freeze the trails.
 - **Resizing:** targets are recreated automatically when the drawing buffer size changes.
 - **Flicker:** smoothly interpolated random levels (`FlickerGenerator`), applied *after* tone mapping. The first version varied brightness randomly every frame before tone mapping and was barely visible: bright pixels sit in the compressed part of the tone curve, and per-frame changes at 60–120 Hz blur into a steady image. Measured on the demo, 50% depth at 5 Hz dims the displayed image to 0.67 of its peak within a second, with no frame-to-frame jump above 4.2%.
 - **Photosensitivity:** strong full-screen brightness changes around 3–30 Hz can trigger photosensitive seizures. The default depth is subtle (8%), and the demo caps the slider at 50%. Apps exposing flicker to players should keep it subtle or let players turn it off.
+
+## 5a. Vector font (`@rsegrest/vector-display-font`)
+
+- **Stroke glyphs, not an outline font.** The asteroids-p5-ts game draws text with Hyperspace, a filled TrueType imitation of the Asteroids lettering. Here every character is a few beam segments, so text gets the same glow, vertex highlights, phosphor trails and flicker as everything else. The glyphs are original designs in the Atari style, not copied from Hyperspace or from Atari ROM data.
+- **Grid:** 4 units wide by 6 tall (y down, baseline at 6), plus 2 units between letters and 4 between lines. Comma and semicolon descend 1 unit below the baseline.
+- **Character set:** A–Z, 0–9, space, and `. , : ; ! ? ' " - + = * / _ < > ( ) # % ©`. Lowercase letters use the uppercase glyphs.
+- **Readability choices:** zero has a slash; 5 has a chamfered corner, unlike S; and 0/O, 1/I, 2/Z, 5/S, 6/G and 8/B are checked by a test to stay distinct.
+- **Layout:** `font.addText(displayList, { text, x, y, size, alignment, rotation, intensity })`, where `size` is the capital-letter height in world units. Characters are monospaced, `\n` starts a new line, and characters without a glyph keep their column so scores stay aligned. `measureText(text, size)` returns width and height.
+- **Customizing:** `VectorFont.createArcadeFont(extraGlyphs)` replaces or adds glyphs; `VectorFont.fromDefinition({ glyphs, metrics })` builds an entirely different font.
+- **Legibility:** with default glow and bloom, text 16 world units tall or larger reads clearly. At smaller sizes, lower `endpointBrightness` and bloom, or the vertex highlights crowd together. The demo uses `endpointBrightness: 0.25` and `jointOverlap: 0.35`.
+
+## 5b. 3D wireframes (`@rsegrest/vector-display-3d`)
+
+- **Space:** x right, **y up**, z forward, converted to the display's y-down screen coordinates at projection.
+- **`WireframeModel.fromDefinition({ vertices, polylines })`:** vertices are es-vector-math `Vector`s; each polyline lists vertex indices and whether it closes. Edges within a polyline stay connected so joints render cleanly. `createBoxModel` and `createPyramidModel` build simple shapes.
+- **Per-vertex math uses es-vector-math:** `scale` → `rotateXYZ` (x, then y, then z) → `add` the model position → `subtract` the camera position → `rotateY` / `rotateX` by the inverse camera yaw and pitch → `getPerspective`.
+- **Camera (`PerspectiveCamera`):** uses es-vector-math's perspective model. The eye sits `viewDistance` behind a projection plane at `position`, so objects on that plane keep their size. Positive yaw turns toward +x; positive pitch tilts down.
+- **Near-plane clipping:** edges entirely closer than `nearDistance` to the eye are dropped. Edges crossing that distance are cut at it, and their joints are disconnected where the cut happened. Objects can fly past or through the viewer without lines stretching across the screen.
+- **Per-frame use:** `displayList.addShape(projector.project(model, placement), SCREEN_SPACE_PLACEMENT)`. The projector reuses its buffers, so add each result before projecting the next model.
+- **Cost:** es-vector-math creates several new vectors per vertex. That's fine for wireframe-game scale (hundreds to a few thousand vertices per frame) but would be the first thing to optimize for much larger scenes.
+- **es-vector-math pitfall found:** `VectorMath.expand2D()` returns z = 0 even when given a 3D vector, so the model only expands vertices that are actually 2D. A future es-vector-math release could make `expand2D` leave 3D vectors unchanged.
 
 ## 6. Other design decisions
 
@@ -182,7 +207,7 @@ Measured 2026-09-13 in Chrome on an Apple M2 (ANGLE/Metal), canvas 2388×1790 de
 
 ```sh
 npm install
-npm run dev   # http://localhost:5173 (or the port Vite prints)
+npm run dev   # http://localhost:5173 (or the port Vite prints); the Font & 3D page is at /font-and-3d.html
 ```
 
 Switch **Renderer** and **Asteroids** in the header and read the live FPS. The **Vertex dwell** and **Joint overlap** sliders (both WebGL modes) and the **Persistence**, **Bloom**, **Flicker** and **Flicker Hz** sliders (phosphor mode) adjust the look live.
@@ -204,9 +229,9 @@ Use `waitsForGpu: true` for large object counts. Without it, frames can be queue
 - Benchmark app comparing it with the p5 approach
 
 **Phase 2: make it usable for a real game**
-- Per-segment intensity controls, including an option where shorter segments draw brighter (the beam spends more time on them).
-- A **vector font** (a Hershey-style stroke font like the arcade games used) for scores and text.
-- **3D wireframes** for *Tempest*, *Star Wars* and *Battlezone*: project 3D shapes with es-vector-math's `rotateXYZ` / `perspectiveProjection` before adding them to the display list. es-vector-math becomes a real dependency at this point.
+- ~~Vector font~~ (prototype done, section 5a).
+- ~~3D wireframes with es-vector-math projection~~ (prototype done, section 5b). Next: depth-based intensity (dimmer when farther away) and hidden-line options.
+- Per-segment intensity controls, including an option where shorter segments draw brighter (the beam spends more time on them), and per-shape line styles so text and game objects can use different vertex highlights.
 - Dev overlay with GPU timer queries (when available) and live FPS.
 - Browser-based tests for the WebGL packages (Vitest browser mode or Playwright), plus screenshot checks of shader output.
 - Tune the per-line glow radius when bloom is on (bloom already supplies the wide glow, so smaller quads reduce GPU fill cost). Needs measuring in a visible tab.

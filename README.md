@@ -11,7 +11,9 @@ Fast, general-purpose rendering of vector-arcade-style graphics (think *Asteroid
 | [`@rsegrest/vector-display`](packages/core) | Shapes and per-frame display lists of beam segments. No rendering; runs anywhere |
 | [`@rsegrest/vector-display-webgl`](packages/webgl) | WebGL2 renderer: the whole display list in one draw call, with glow and bright endpoints |
 | [`@rsegrest/vector-display-beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer |
-| [`examples/asteroids-benchmark`](examples/asteroids-benchmark) | Demo and benchmark comparing p5.js Canvas 2D, WebGL2, and WebGL2 with phosphor |
+| [`@rsegrest/vector-display-font`](packages/font) | Atari-style vector stroke font with text layout |
+| [`@rsegrest/vector-display-3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math |
+| [`examples/demo`](examples/demo) | Renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor) and a font & 3D showcase |
 
 ## Usage
 
@@ -44,6 +46,23 @@ To soften or remove the bright dots at vertices, lower `endpointBrightness` and 
 renderer.setLineStyle({ endpointBrightness: 0, jointOverlap: 0 }); // seamless joints, no vertex highlight
 ```
 
+### Text and 3D
+
+```ts
+import { SCREEN_SPACE_PLACEMENT } from "@rsegrest/vector-display";
+import { VectorFont } from "@rsegrest/vector-display-font";
+import { DEFAULT_PERSPECTIVE_CAMERA, WireframeProjector, createBoxModel, createModelPlacement } from "@rsegrest/vector-display-3d";
+import { Angle, Vector } from "es-vector-math";
+
+const font = VectorFont.createArcadeFont();
+font.addText(displayList, { text: "SCORE 01250", x: 40, y: 30, size: 20 });
+
+const cube = createBoxModel({ width: 100, height: 100, depth: 100 });
+const projector = new WireframeProjector(DEFAULT_PERSPECTIVE_CAMERA);
+const placement = createModelPlacement({ position: new Vector(0, 0, 300), rotationY: Angle.fromDegrees(30) });
+displayList.addShape(projector.project(cube, placement), SCREEN_SPACE_PLACEMENT);
+```
+
 World coordinates use a top-left origin with y pointing down, like Canvas 2D and p5. Points only need `x` and `y`, so es-vector-math `Vector` and `Point` instances work directly.
 
 ## Development
@@ -52,7 +71,7 @@ Requires Node 24+.
 
 ```sh
 npm install
-npm run dev        # benchmark demo (Vite)
+npm run dev        # demo app (Vite): benchmark at /, font & 3D at /font-and-3d.html
 npm test           # unit tests (Vitest)
 npm run build      # build all packages (tsc -b)
 npm run typecheck  # packages + demo

@@ -22,3 +22,13 @@ export interface ShapePlacement {
     readonly scale: number;
     readonly intensity: number;
 }
+
+// Anything shaped like a Shape can be drawn, including geometry rebuilt each frame (e.g. projected 3D wireframes).
+export interface ShapeGeometry {
+    readonly segmentCoordinates: Float32Array;
+    readonly segmentNeighbors: Int32Array;
+    readonly segmentCount: number;
+}
+
+// For geometry that is already in world coordinates.
+export const SCREEN_SPACE_PLACEMENT: ShapePlacement = { x: 0, y: 0, rotation: 0, scale: 1, intensity: 1 };

@@ -1,5 +1,5 @@
-import type { BeamColor, ShapePlacement } from "./geometryTypes.js";
-import { NO_NEIGHBOR_SEGMENT, type Shape } from "./Shape.js";
+import type { BeamColor, ShapeGeometry, ShapePlacement } from "./geometryTypes.js";
+import { NO_NEIGHBOR_SEGMENT } from "./Shape.js";
 
 // Packed per segment (world units):
 //  0-3  x0, y0, x1, y1
@@ -34,7 +34,7 @@ export class DisplayList {
         this.currentColor = color;
     }
 
-    public addShape(shape: Shape, placement: ShapePlacement): void {
+    public addShape(shape: ShapeGeometry, placement: ShapePlacement): void {
         this.ensureCapacity(this.usedSegmentCount + shape.segmentCount);
         this.writeTransformedSegments(shape, placement);
         this.usedSegmentCount += shape.segmentCount;
@@ -51,7 +51,7 @@ export class DisplayList {
     }
 
     // World coordinates use a y-down origin at the top left, so positive rotation turns clockwise on screen.
-    private writeTransformedSegments(shape: Shape, placement: ShapePlacement): void {
+    private writeTransformedSegments(shape: ShapeGeometry, placement: ShapePlacement): void {
         const { x, y, rotation, scale, intensity } = placement;
         const { red, green, blue } = this.currentColor;
         const scaledCosine = Math.cos(rotation) * scale;

@@ -6,13 +6,15 @@
     "packages/core",
     "packages/webgl",
     "packages/beam-fx",
-    "examples/asteroids-benchmark"
+    "packages/font",
+    "packages/3d",
+    "examples/demo"
   ],
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",
-    "typecheck": "tsc -b && npm run typecheck -w examples/asteroids-benchmark",
-    "dev": "npm run dev -w examples/asteroids-benchmark"
+    "typecheck": "tsc -b && npm run typecheck -w examples/demo",
+    "dev": "npm run dev -w examples/demo"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

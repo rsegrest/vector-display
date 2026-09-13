@@ -1,13 +1,15 @@
-export const DECAY_FRAGMENT_SHADER = `#version 300 es
+export const PERSISTENCE_FRAGMENT_SHADER = `#version 300 es
 precision highp float;
 uniform sampler2D u_previousFrame;
+uniform sampler2D u_currentBeams;
 uniform float u_decay;
 uniform float u_decayFloor;
 in vec2 v_textureCoordinate;
 out vec4 outColor;
 void main() {
-    vec3 previous = texture(u_previousFrame, v_textureCoordinate).rgb;
-    outColor = vec4(max(previous * u_decay - u_decayFloor, 0.0), 1.0);
+    vec3 fadedTrail = max(texture(u_previousFrame, v_textureCoordinate).rgb * u_decay - u_decayFloor, 0.0);
+    vec3 currentBeams = texture(u_currentBeams, v_textureCoordinate).rgb;
+    outColor = vec4(max(fadedTrail, currentBeams), 1.0);
 }
 `;
 
