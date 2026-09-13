@@ -1,0 +1,177 @@
+import type { DisplayList } from "@rsegrest/vector-display";
+import type { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
+import { BLUR_FRAGMENT_SHADER, COMPOSITE_FRAGMENT_SHADER, DECAY_FRAGMENT_SHADER } from "./effectShaders.js";
+import { FullscreenPass } from "./FullscreenPass.js";
+import { RenderTarget } from "./RenderTarget.js";
+
+export interface PhosphorSettings {
+    // Time for a trail to fade to half brightness.
+    readonly persistenceHalfLifeMilliseconds: number;
+    readonly bloomStrength: number;
+    readonly bloomBlurIterations: number;
+    readonly exposure: number;
+    // 0 disables flicker; 0.05 varies overall brightness by up to ±2.5% per frame.
+    readonly flickerAmount: number;
+}
+
+export const DEFAULT_PHOSPHOR_SETTINGS: PhosphorSettings = {
+    persistenceHalfLifeMilliseconds: 40,
+    bloomStrength: 1.2,
+    bloomBlurIterations: 2,
+    exposure: 1.6,
+    flickerAmount: 0.04,
+};
+
+const MAXIMUM_FRAME_GAP_MILLISECONDS = 100;
+// 8-bit targets can't store tiny values, so without a floor faint trails would never fully fade.
+const EIGHT_BIT_DECAY_FLOOR = 1.5 / 255;
+
+interface TargetSize {
+    readonly width: number;
+    readonly height: number;
+}
+
+export class PhosphorPipeline {
+    private readonly gl: WebGL2RenderingContext;
+    private readonly renderer: WebGLVectorRenderer;
+    private readonly usesFloatStorage: boolean;
+    private readonly decayPass: FullscreenPass;
+    private readonly blurPass: FullscreenPass;
+    private readonly compositePass: FullscreenPass;
+    private settings: PhosphorSettings = DEFAULT_PHOSPHOR_SETTINGS;
+    private latestPhosphor: RenderTarget | null = null;
+    private scratchPhosphor: RenderTarget | null = null;
+    private bloomTargets: [RenderTarget, RenderTarget] | null = null;
+
+    constructor(renderer: WebGLVectorRenderer, settings: Partial<PhosphorSettings> = {}) {
+        this.renderer = renderer;
+        this.gl = renderer.gl;
+        this.usesFloatStorage = this.gl.getExtension("EXT_color_buffer_float") !== null;
+        this.decayPass = new FullscreenPass(this.gl, DECAY_FRAGMENT_SHADER);
+        this.blurPass = new FullscreenPass(this.gl, BLUR_FRAGMENT_SHADER);
+        this.compositePass = new FullscreenPass(this.gl, COMPOSITE_FRAGMENT_SHADER);
+        this.setSettings(settings);
+    }
+
+    public get isUsingFloatStorage(): boolean {
+        return this.usesFloatStorage;
+    }
+
+    public setSettings(settings: Partial<PhosphorSettings>): void {
+        this.settings = { ...this.settings, ...settings };
+    }
+
+    public renderFrame(displayList: DisplayList, elapsedMilliseconds: number): void {
+        this.resizeTargetsToDrawingBuffer();
+        this.fadePreviousFrame(elapsedMilliseconds);
+        this.drawBeams(displayList);
+        this.blurIntoBloom();
+        this.compositeToCanvas();
+    }
+
+    public dispose(): void {
+        this.disposeTargets();
+        this.decayPass.dispose();
+        this.blurPass.dispose();
+        this.compositePass.dispose();
+    }
+
+    private resizeTargetsToDrawingBuffer(): void {
+        const width = this.gl.drawingBufferWidth;
+        const height = this.gl.drawingBufferHeight;
+        if (this.latestPhosphor?.width === width && this.latestPhosphor.height === height) return;
+        this.disposeTargets();
+        this.latestPhosphor = this.createTarget({ width, height });
+        this.scratchPhosphor = this.createTarget({ width, height });
+        const bloomSize = { width: Math.max(1, width >> 1), height: Math.max(1, height >> 1) };
+        this.bloomTargets = [this.createTarget(bloomSize), this.createTarget(bloomSize)];
+    }
+
+    private createTarget(size: TargetSize): RenderTarget {
+        return new RenderTarget(this.gl, { ...size, usesFloatStorage: this.usesFloatStorage });
+    }
+
+    // Writes the faded previous frame into the scratch target, which then becomes the latest frame.
+    private fadePreviousFrame(elapsedMilliseconds: number): void {
+        const gl = this.gl;
+        const previous = this.latestPhosphor!;
+        const next = this.scratchPhosphor!;
+        const clampedElapsed = Math.min(Math.max(elapsedMilliseconds, 0), MAXIMUM_FRAME_GAP_MILLISECONDS);
+        const decay = Math.pow(0.5, clampedElapsed / this.settings.persistenceHalfLifeMilliseconds);
+        next.bindForDrawing();
+        gl.disable(gl.BLEND);
+        this.decayPass.use();
+        this.bindTexture(previous.texture, 0);
+        gl.uniform1i(this.decayPass.getUniformLocation("u_previousFrame"), 0);
+        gl.uniform1f(this.decayPass.getUniformLocation("u_decay"), decay);
+        gl.uniform1f(this.decayPass.getUniformLocation("u_decayFloor"), this.usesFloatStorage ? 0 : EIGHT_BIT_DECAY_FLOOR);
+        this.decayPass.draw();
+        this.latestPhosphor = next;
+        this.scratchPhosphor = previous;
+    }
+
+    private drawBeams(displayList: DisplayList): void {
+        this.latestPhosphor!.bindForDrawing();
+        this.renderer.drawDisplayList(displayList);
+    }
+
+    private blurIntoBloom(): void {
+        const gl = this.gl;
+        const [horizontalTarget, verticalTarget] = this.bloomTargets!;
+        gl.disable(gl.BLEND);
+        this.blurPass.use();
+        gl.uniform1i(this.blurPass.getUniformLocation("u_source"), 0);
+        let sourceTexture = this.latestPhosphor!.texture;
+        for (let iteration = 0; iteration < this.settings.bloomBlurIterations; iteration++) {
+            this.runBlurStep(sourceTexture, { target: horizontalTarget, isHorizontal: true });
+            this.runBlurStep(horizontalTarget.texture, { target: verticalTarget, isHorizontal: false });
+            sourceTexture = verticalTarget.texture;
+        }
+    }
+
+    private runBlurStep(sourceTexture: WebGLTexture, step: { target: RenderTarget; isHorizontal: boolean }): void {
+        const { target, isHorizontal } = step;
+        target.bindForDrawing();
+        this.bindTexture(sourceTexture, 0);
+        const texelStepX = isHorizontal ? 1 / target.width : 0;
+        const texelStepY = isHorizontal ? 0 : 1 / target.height;
+        this.gl.uniform2f(this.blurPass.getUniformLocation("u_texelStep"), texelStepX, texelStepY);
+        this.blurPass.draw();
+    }
+
+    private compositeToCanvas(): void {
+        const gl = this.gl;
+        const flickerBrightness = 1 + (Math.random() - 0.5) * this.settings.flickerAmount;
+        const hasBloom = this.settings.bloomBlurIterations > 0;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        gl.disable(gl.BLEND);
+        this.compositePass.use();
+        this.bindTexture(this.latestPhosphor!.texture, 0);
+        this.bindTexture(this.bloomTargets![1].texture, 1);
+        gl.uniform1i(this.compositePass.getUniformLocation("u_phosphor"), 0);
+        gl.uniform1i(this.compositePass.getUniformLocation("u_bloom"), 1);
+        gl.uniform1f(this.compositePass.getUniformLocation("u_bloomStrength"), hasBloom ? this.settings.bloomStrength : 0);
+        gl.uniform1f(this.compositePass.getUniformLocation("u_exposure"), this.settings.exposure);
+        gl.uniform1f(this.compositePass.getUniformLocation("u_flickerBrightness"), flickerBrightness);
+        this.compositePass.draw();
+        this.bindTexture(null, 1);
+        this.bindTexture(null, 0);
+    }
+
+    private bindTexture(texture: WebGLTexture | null, textureUnit: number): void {
+        this.gl.activeTexture(this.gl.TEXTURE0 + textureUnit);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    }
+
+    private disposeTargets(): void {
+        this.latestPhosphor?.dispose();
+        this.scratchPhosphor?.dispose();
+        this.bloomTargets?.forEach((target) => target.dispose());
+        this.latestPhosphor = null;
+        this.scratchPhosphor = null;
+        this.bloomTargets = null;
+    }
+}
+
+export default PhosphorPipeline;

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vector Display Benchmark</title>
+    <style>
+      :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      body { margin: 0; background: #050505; color: #b8ffb8; display: flex; flex-direction: column; height: 100vh; }
+      header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #143314; font-size: 13px; }
+      label { display: flex; align-items: center; gap: 6px; }
+      select, input[type="number"] { background: #0c1a0c; color: inherit; border: 1px solid #245524; padding: 2px 4px; font: inherit; }
+      input[type="range"] { width: 110px; }
+      #stats { margin-left: auto; white-space: pre; line-height: 1.35; color: #e8ffe8; }
+      #stage { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      #p5-container canvas, #webgl-canvas { display: block; background: #000; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <label>Renderer
+        <select id="renderer-mode">
+          <option value="p5">p5.js (Canvas 2D)</option>
+          <option value="webgl">WebGL2</option>
+          <option value="phosphor" selected>WebGL2 + phosphor</option>
+        </select>
+      </label>
+      <label>Asteroids
+        <select id="asteroid-count">
+          <option>10</option><option selected>40</option><option>250</option><option>1000</option><option>5000</option><option>20000</option>
+        </select>
+      </label>
+      <label class="phosphor-control">Persistence <input id="persistence" type="range" min="5" max="400" value="40" /></label>
+      <label class="phosphor-control">Bloom <input id="bloom" type="range" min="0" max="300" value="120" /></label>
+      <div id="stats"></div>
+    </header>
+    <main id="stage">
+      <div id="p5-container" hidden></div>
+      <canvas id="webgl-canvas"></canvas>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

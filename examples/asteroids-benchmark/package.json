@@ -1,0 +1,22 @@
+{
+  "name": "asteroids-benchmark",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rsegrest/vector-display": "0.1.0",
+    "@rsegrest/vector-display-beam-fx": "0.1.0",
+    "@rsegrest/vector-display-webgl": "0.1.0",
+    "es-vector-math": "^0.1.0",
+    "motion-and-tween": "^0.1.0",
+    "p5": "^2.3.3"
+  },
+  "devDependencies": {
+    "@types/p5": "^1.7.7",
+    "vite": "^8.3.0"
+  }
+}

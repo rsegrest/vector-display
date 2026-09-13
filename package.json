@@ -1,0 +1,21 @@
+{
+  "name": "vector-display-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/webgl",
+    "packages/beam-fx",
+    "examples/asteroids-benchmark"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "typecheck": "tsc -b && npm run typecheck -w examples/asteroids-benchmark",
+    "dev": "npm run dev -w examples/asteroids-benchmark"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  }
+}
