@@ -57,10 +57,18 @@ The beam's drawing program for one frame, in draw order. It's reused every frame
 | --- | --- |
 | `setColor({ red, green, blue })` | Current beam color, like a vector monitor's color register |
 | `addShape(shape, { x, y, rotation, scale, intensity })` | Transforms the shape's segments into world space and appends them |
-| `getSegmentData()` | Packed `Float32Array` view: **8 floats per segment**: `x0, y0, x1, y1, red, green, blue, intensity` |
+| `getSegmentData()` | Packed `Float32Array` view, **14 floats per segment**: `x0, y0, x1, y1`, previous neighbor's start `x, y`, next neighbor's end `x, y`, `red, green, blue, intensity`, `hasPrevious, hasNext` |
 | `clear()` / `segmentCount` | Frame management |
 
 Keeping draw order matters for later beam effects, where the order the beam visits segments affects brightness and trails.
+
+### Segment neighbors
+`Shape` records which segments connect (`segmentNeighbors`: previous and next segment index per segment, or `-1`):
+- Consecutive segments in a polyline are connected; closed polylines also connect the last segment to the first.
+- Separate polylines in one shape, and the outer ends of open polylines, are not connected.
+- `fromSegmentCoordinates` connects consecutive segments whose end and start points are exactly equal.
+
+The display list carries each segment's neighbor points so the renderer can control how joints look (section 4).
 
 ## 4. WebGL renderer (`@rsegrest/vector-display-webgl`)
 
@@ -76,7 +84,23 @@ Keeping draw order matters for later beam effects, where the order the beam visi
   - a Gaussian **glow** (`glowRadius`, `glowStrength`)
   - an **endpoint dwell** highlight (`endpointBrightness`). The beam slows at vertices, so real vector monitors drew corners and dots brighter.
 
-All `LineStyle` sizes are in framebuffer pixels; callers multiply by `devicePixelRatio`.
+| `LineStyle` field | Default | Effect |
+| --- | --- | --- |
+| `beamWidth` | 1.5 | Core line width |
+| `glowRadius` / `glowStrength` | 4 / 0.25 | Soft halo around each line |
+| `endpointBrightness` | 0.6 | Dwell highlight at segment endpoints; `0` removes it |
+| `jointOverlap` | 1 | How much connected segments add up where they meet; `0` gives seamless joints |
+
+All sizes are in framebuffer pixels; callers multiply by `devicePixelRatio`.
+
+### Joints: why vertices look like dots, and how to remove them
+Two separate things brighten vertices:
+1. **Endpoint dwell:** a deliberate highlight, controlled by `endpointBrightness`.
+2. **Overlap:** each segment draws a rounded end, so at a joint two segments' ends and glows cover the same pixels and additive blending doubles them. Bloom makes this more visible.
+
+To control overlap, each fragment also measures its distance to the connected previous and next segments. **The closest segment owns the pixel**, and the others contribute only `jointOverlap` there (ties go to the previous segment, so exactly one segment owns every pixel). At `1` this matches plain additive drawing; at `0` joints are seamless, with no gaps or seams. Measured on the demo scene, joint overlap 0 lights exactly the same pixels as 1 with about 13% less total brightness, all of it removed from joints.
+
+Segments that aren't connected (for example two different asteroids crossing) still add up, which is authentic for a vector monitor.
 
 ### Working with other libraries
 - `new WebGLVectorRenderer(gl, worldSize)` accepts an existing `WebGL2RenderingContext`. `WebGLVectorRenderer.fromCanvas(canvas, worldSize)` is a shortcut that creates one.
@@ -141,6 +165,7 @@ Measured 2026-09-13 in Chrome on an Apple M2 (ANGLE/Metal), canvas 2388×1790 de
 - The p5 baseline draws the way `asteroids-p5-ts` does today: per-object `push`/`translate`/`rotate`/`scale`, `stroke()` with a CSS color string, and `beginShape`/`vertex`/`endShape`. A tuned p5 version would be faster, but the gap is structural: one draw call versus thousands of Canvas 2D path operations.
 - p5 numbers varied between runs (one run with pixel readback measured 304 ms at 1,000 asteroids), but were always two to three orders of magnitude above WebGL.
 - Phosphor mode adds almost no CPU time (about 1.0 ms at 1,000 asteroids); its extra cost is on the GPU.
+- These measurements were taken before segment neighbors were added (8 floats per segment instead of 14). Measured in Node, building the display list with neighbor data is about 1.8× slower but still cheap: 0.79 ms instead of 0.43 ms for 50,000 segments, and 3.1 ms instead of 1.7 ms for 200,000.
 
 ### 7.2 WebGL scaling and a finding about the simulation
 
@@ -158,11 +183,15 @@ npm install
 npm run dev   # http://localhost:5173 (or the port Vite prints)
 ```
 
-Switch **Renderer** and **Asteroids** in the header and read the live FPS. For scripted runs, open the browser console:
+Switch **Renderer** and **Asteroids** in the header and read the live FPS. The **Vertex dwell** and **Joint overlap** sliders (both WebGL modes) and the **Persistence**, **Bloom** and **Flicker** sliders (phosphor mode) adjust the look live.
+
+For scripted runs, open the browser console:
 
 ```js
 vectorDisplayBenchmark.measureFrameCost({ mode: "webgl", asteroidCount: 1000, frameCount: 60, waitsForGpu: false })
 ```
+
+Use `waitsForGpu: true` for large object counts. Without it, frames can be queued faster than the GPU finishes them, and the CPU timings then include waiting on that queue.
 
 ## 8. Roadmap
 

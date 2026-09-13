@@ -19,6 +19,9 @@ const modeSelect = requireElement<HTMLSelectElement>("renderer-mode");
 const asteroidCountSelect = requireElement<HTMLSelectElement>("asteroid-count");
 const persistenceSlider = requireElement<HTMLInputElement>("persistence");
 const bloomSlider = requireElement<HTMLInputElement>("bloom");
+const flickerSlider = requireElement<HTMLInputElement>("flicker");
+const vertexDwellSlider = requireElement<HTMLInputElement>("vertex-dwell");
+const jointOverlapSlider = requireElement<HTMLInputElement>("joint-overlap");
 const statsElement = requireElement<HTMLDivElement>("stats");
 const stageElement = requireElement<HTMLElement>("stage");
 
@@ -41,6 +44,9 @@ function applyRendererMode(mode: RendererMode): void {
     webglRenderer.element.hidden = mode === "p5";
     document.querySelectorAll<HTMLElement>(".phosphor-control").forEach((control) => {
         control.hidden = mode !== "phosphor";
+    });
+    document.querySelectorAll<HTMLElement>(".webgl-control").forEach((control) => {
+        control.hidden = mode === "p5";
     });
     frameStats.reset();
 }
@@ -156,6 +162,15 @@ persistenceSlider.addEventListener("input", () => {
 bloomSlider.addEventListener("input", () => {
     webglRenderer.setPhosphorSettings({ bloomStrength: Number(bloomSlider.value) / 100 });
 });
+flickerSlider.addEventListener("input", () => {
+    webglRenderer.setPhosphorSettings({ flickerAmount: Number(flickerSlider.value) / 100 });
+});
+vertexDwellSlider.addEventListener("input", () => {
+    webglRenderer.setJointStyle({ endpointBrightness: Number(vertexDwellSlider.value) / 100 });
+});
+jointOverlapSlider.addEventListener("input", () => {
+    webglRenderer.setJointStyle({ jointOverlap: Number(jointOverlapSlider.value) / 100 });
+});
 new ResizeObserver(fitRenderersToStage).observe(stageElement);
 
 // Lets a script drive the benchmark, e.g. from the browser console.
@@ -165,6 +180,12 @@ Object.assign(window, {
         setAsteroidCount: applyAsteroidCount,
         getAverages: () => ({ ...frameStats.getAverages(), segmentCount: webglRenderer.segmentCount }),
         measureFrameCost,
+        // Redraws the current simulation state without advancing it, e.g. to compare settings on an identical frame.
+        renderCurrentFrame: () => {
+            activeRenderer.render(simulation.getSceneObjects(), FIXED_FRAME_MILLISECONDS);
+            activeRenderer.waitForDrawingToFinish();
+        },
+        setJointStyle: (jointStyle: Parameters<WebGLSceneRenderer["setJointStyle"]>[0]) => webglRenderer.setJointStyle(jointStyle),
         setGlowRadiusCssPixels: (glowRadiusCssPixels: number) => webglRenderer.setGlowRadiusCssPixels(glowRadiusCssPixels),
         setPhosphorSettings: (settings: Parameters<WebGLSceneRenderer["setPhosphorSettings"]>[0]) => webglRenderer.setPhosphorSettings(settings),
     },

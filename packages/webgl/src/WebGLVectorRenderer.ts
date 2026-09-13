@@ -7,7 +7,10 @@ export interface LineStyle {
     readonly beamWidth: number;
     readonly glowRadius: number;
     readonly glowStrength: number;
+    // Extra brightness where the beam dwells at segment endpoints; 0 removes the highlight.
     readonly endpointBrightness: number;
+    // How much connected segments add up where they meet: 1 = additive overlap (brighter joints), 0 = seamless.
+    readonly jointOverlap: number;
 }
 
 export interface WorldSize {
@@ -20,9 +23,19 @@ export const DEFAULT_LINE_STYLE: LineStyle = {
     glowRadius: 4,
     glowStrength: 0.25,
     endpointBrightness: 0.6,
+    jointOverlap: 1,
 };
 
 const BYTES_PER_FLOAT = 4;
+
+// Matches the packed layout documented on FLOATS_PER_BEAM_SEGMENT in @rsegrest/vector-display.
+const SEGMENT_ATTRIBUTES = [
+    { location: 0, size: 4, floatOffset: 0 },
+    { location: 1, size: 4, floatOffset: 4 },
+    { location: 2, size: 4, floatOffset: 8 },
+    { location: 3, size: 2, floatOffset: 12 },
+] as const;
+
 const GLOW_EXTENT_IN_RADII = 3;
 
 interface BeamUniformLocations {
@@ -33,6 +46,7 @@ interface BeamUniformLocations {
     readonly glowRadius: WebGLUniformLocation | null;
     readonly glowStrength: WebGLUniformLocation | null;
     readonly endpointBrightness: WebGLUniformLocation | null;
+    readonly jointOverlap: WebGLUniformLocation | null;
 }
 
 export class WebGLVectorRenderer {
@@ -117,6 +131,7 @@ export class WebGLVectorRenderer {
             glowRadius: gl.getUniformLocation(program, "u_glowRadius"),
             glowStrength: gl.getUniformLocation(program, "u_glowStrength"),
             endpointBrightness: gl.getUniformLocation(program, "u_endpointBrightness"),
+            jointOverlap: gl.getUniformLocation(program, "u_jointOverlap"),
         };
     }
 
@@ -126,12 +141,11 @@ export class WebGLVectorRenderer {
         const strideBytes = FLOATS_PER_BEAM_SEGMENT * BYTES_PER_FLOAT;
         gl.bindVertexArray(vertexArray);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.segmentBuffer);
-        gl.enableVertexAttribArray(0);
-        gl.vertexAttribPointer(0, 4, gl.FLOAT, false, strideBytes, 0);
-        gl.vertexAttribDivisor(0, 1);
-        gl.enableVertexAttribArray(1);
-        gl.vertexAttribPointer(1, 4, gl.FLOAT, false, strideBytes, 4 * BYTES_PER_FLOAT);
-        gl.vertexAttribDivisor(1, 1);
+        for (const attribute of SEGMENT_ATTRIBUTES) {
+            gl.enableVertexAttribArray(attribute.location);
+            gl.vertexAttribPointer(attribute.location, attribute.size, gl.FLOAT, false, strideBytes, attribute.floatOffset * BYTES_PER_FLOAT);
+            gl.vertexAttribDivisor(attribute.location, 1);
+        }
         gl.bindVertexArray(null);
         return vertexArray;
     }
@@ -148,7 +162,7 @@ export class WebGLVectorRenderer {
 
     private applyUniforms(): void {
         const gl = this.gl;
-        const { beamWidth, glowRadius, glowStrength, endpointBrightness } = this.lineStyle;
+        const { beamWidth, glowRadius, glowStrength, endpointBrightness, jointOverlap } = this.lineStyle;
         const beamHalfWidth = beamWidth / 2;
         gl.uniform2f(this.uniforms.worldSize, this.worldSize.width, this.worldSize.height);
         gl.uniform2f(this.uniforms.targetSize, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -157,6 +171,7 @@ export class WebGLVectorRenderer {
         gl.uniform1f(this.uniforms.glowRadius, glowRadius);
         gl.uniform1f(this.uniforms.glowStrength, glowStrength);
         gl.uniform1f(this.uniforms.endpointBrightness, endpointBrightness);
+        gl.uniform1f(this.uniforms.jointOverlap, jointOverlap);
     }
 }
 

@@ -1,5 +1,5 @@
 import { DisplayList, Shape, type BeamColor } from "@rsegrest/vector-display";
-import { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
+import { WebGLVectorRenderer, type LineStyle } from "@rsegrest/vector-display-webgl";
 import { PhosphorPipeline, type PhosphorSettings } from "@rsegrest/vector-display-beam-fx";
 import { ARCADE_SHAPE_POLYLINES, getShapeColor, type ArcadeShapeName } from "../arcadeShapes.js";
 import type { SceneObject, SceneRenderer, WorldSize } from "../sceneTypes.js";
@@ -33,6 +33,10 @@ export class WebGLSceneRenderer implements SceneRenderer {
 
     public setPhosphorEnabled(isEnabled: boolean): void {
         this.isPhosphorEnabled = isEnabled;
+    }
+
+    public setJointStyle(jointStyle: Pick<Partial<LineStyle>, "endpointBrightness" | "jointOverlap">): void {
+        this.renderer.setLineStyle(jointStyle);
     }
 
     public setGlowRadiusCssPixels(glowRadiusCssPixels: number): void {

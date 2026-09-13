@@ -40,6 +40,30 @@ describe("Shape", () => {
         expect(Array.from(Shape.createDot().segmentCoordinates)).toEqual([0, 0, 0, 0]);
     });
 
+    it("links each segment of a closed polyline to its neighbors, wrapping around", () => {
+        const triangle = Shape.fromPolyline({
+            points: [{ x: 0, y: 0 }, { x: 4, y: 0 }, { x: 0, y: 3 }],
+            isClosed: true,
+        });
+        expect(Array.from(triangle.segmentNeighbors)).toEqual([2, 1, 0, 2, 1, 0]);
+    });
+
+    it("leaves the outer ends of an open polyline and separate polylines unconnected", () => {
+        const twoChains = Shape.fromPolylines([
+            { points: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }], isClosed: false },
+            { points: [{ x: 2, y: 0 }, { x: 3, y: 0 }], isClosed: false },
+        ]);
+        expect(Array.from(twoChains.segmentNeighbors)).toEqual([-1, 1, 0, -1, -1, -1]);
+        expect(Array.from(Shape.createDot().segmentNeighbors)).toEqual([-1, -1]);
+    });
+
+    it("connects raw segments whose endpoints touch", () => {
+        const square = Shape.fromSegmentCoordinates([0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0]);
+        expect(Array.from(square.segmentNeighbors)).toEqual([3, 1, 0, 2, 1, 3, 2, 0]);
+        const gap = Shape.fromSegmentCoordinates([0, 0, 1, 0, 5, 5, 6, 5]);
+        expect(Array.from(gap.segmentNeighbors)).toEqual([-1, -1, -1, -1]);
+    });
+
     it("rejects segment coordinates that are not in groups of four", () => {
         expect(() => Shape.fromSegmentCoordinates([0, 0, 1])).toThrow(Error);
     });
@@ -61,7 +85,19 @@ describe("DisplayList", () => {
         const displayList = new DisplayList();
         displayList.setColor({ red: 0, green: 0.5, blue: 0.25 });
         displayList.addShape(unitLine, { ...IDENTITY_PLACEMENT, intensity: 0.75 });
-        expect(readSegment(displayList, 0).slice(4)).toEqual([0, 0.5, 0.25, 0.75]);
+        expect(readSegment(displayList, 0).slice(8, 12)).toEqual([0, 0.5, 0.25, 0.75]);
+    });
+
+    it("packs transformed neighbor points and connection flags", () => {
+        const displayList = new DisplayList();
+        const openChain = Shape.fromPolyline({ points: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }], isClosed: false });
+        displayList.addShape(openChain, { ...IDENTITY_PLACEMENT, x: 10 });
+        const firstSegment = readSegment(displayList, 0);
+        const secondSegment = readSegment(displayList, 1);
+        expect(firstSegment.slice(6, 8)).toEqual([11, 1]);
+        expect(firstSegment.slice(12, 14)).toEqual([0, 1]);
+        expect(secondSegment.slice(4, 6)).toEqual([10, 0]);
+        expect(secondSegment.slice(12, 14)).toEqual([1, 0]);
     });
 
     it("keeps earlier segments when growing past its initial capacity", () => {

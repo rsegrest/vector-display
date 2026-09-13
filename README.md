@@ -38,6 +38,12 @@ function drawFrame(elapsedMilliseconds: number) {
 }
 ```
 
+To soften or remove the bright dots at vertices, lower `endpointBrightness` and `jointOverlap`:
+
+```ts
+renderer.setLineStyle({ endpointBrightness: 0, jointOverlap: 0 }); // seamless joints, no vertex highlight
+```
+
 World coordinates use a top-left origin with y pointing down, like Canvas 2D and p5. Points only need `x` and `y`, so es-vector-math `Vector` and `Point` instances work directly.
 
 ## Development
