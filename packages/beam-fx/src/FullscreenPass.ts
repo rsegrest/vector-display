@@ -1,4 +1,4 @@
-import { createShaderProgram } from "@rsegrest/vector-display-webgl";
+import { createShaderProgram } from "@vector-display/webgl";
 
 // One oversized triangle generated from gl_VertexID, so no vertex buffer is needed.
 const FULLSCREEN_VERTEX_SHADER = `#version 300 es

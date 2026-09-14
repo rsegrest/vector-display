@@ -1,4 +1,4 @@
-import { FLOATS_PER_BEAM_SEGMENT, type DisplayList } from "@rsegrest/vector-display";
+import { FLOATS_PER_BEAM_SEGMENT, type DisplayList } from "@vector-display/core";
 import { BEAM_FRAGMENT_SHADER, BEAM_VERTEX_SHADER } from "./beamShaders.js";
 import { createShaderProgram } from "./createShaderProgram.js";
 
@@ -28,7 +28,7 @@ export const DEFAULT_LINE_STYLE: LineStyle = {
 
 const BYTES_PER_FLOAT = 4;
 
-// Matches the packed layout documented on FLOATS_PER_BEAM_SEGMENT in @rsegrest/vector-display.
+// Matches the packed layout documented on FLOATS_PER_BEAM_SEGMENT in @vector-display/core.
 const SEGMENT_ATTRIBUTES = [
     { location: 0, size: 4, floatOffset: 0 },
     { location: 1, size: 4, floatOffset: 4 },

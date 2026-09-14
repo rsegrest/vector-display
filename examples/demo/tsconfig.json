@@ -5,7 +5,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "customConditions": ["@rsegrest/source"],
+    "customConditions": ["@vector-display/source"],
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "skipLibCheck": true

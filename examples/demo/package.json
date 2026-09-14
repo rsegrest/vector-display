@@ -8,11 +8,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@rsegrest/vector-display": "0.1.0",
-    "@rsegrest/vector-display-3d": "0.1.0",
-    "@rsegrest/vector-display-beam-fx": "0.1.0",
-    "@rsegrest/vector-display-font": "0.1.0",
-    "@rsegrest/vector-display-webgl": "0.1.0",
+    "@vector-display/core": "0.1.0",
+    "@vector-display/3d": "0.1.0",
+    "@vector-display/beam-fx": "0.1.0",
+    "@vector-display/font": "0.1.0",
+    "@vector-display/webgl": "0.1.0",
     "es-vector-math": "^0.1.0",
     "motion-and-tween": "^0.1.0",
     "p5": "^2.3.3"

@@ -1,4 +1,4 @@
-import { DisplayList, SCREEN_SPACE_PLACEMENT, type BeamColor } from "@rsegrest/vector-display";
+import { DisplayList, SCREEN_SPACE_PLACEMENT, type BeamColor } from "@vector-display/core";
 import {
     DEFAULT_PERSPECTIVE_CAMERA,
     WireframeModel,
@@ -8,10 +8,10 @@ import {
     createPyramidModel,
     type PerspectiveCamera,
     type WireframePolyline,
-} from "@rsegrest/vector-display-3d";
-import { PhosphorPipeline } from "@rsegrest/vector-display-beam-fx";
-import { ARCADE_GLYPHS, VectorFont } from "@rsegrest/vector-display-font";
-import { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
+} from "@vector-display/3d";
+import { PhosphorPipeline } from "@vector-display/beam-fx";
+import { ARCADE_GLYPHS, VectorFont } from "@vector-display/font";
+import { WebGLVectorRenderer } from "@vector-display/webgl";
 import { Angle, Vector } from "es-vector-math";
 
 const WORLD_SIZE = { width: 1024, height: 768 };

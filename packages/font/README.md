@@ -1,13 +1,13 @@
-# @rsegrest/vector-display-font
+# @vector-display/font
 
-An Atari-style vector stroke font and text layout for [**vector-display**](https://www.npmjs.com/package/@rsegrest/vector-display). Letters are drawn as beam lines, so text glows and flickers like everything else on a vector display.
+An Atari-style vector stroke font and text layout for [**vector-display**](https://www.npmjs.com/package/@vector-display/core). Letters are drawn as beam lines, so text glows and flickers like everything else on a vector display.
 
 > **Status:** early (0.x). The API may change between minor versions.
 
 ## Install
 
 ```sh
-npm install @rsegrest/vector-display @rsegrest/vector-display-font
+npm install @vector-display/core @vector-display/font
 ```
 
 ES modules only, with TypeScript declarations.
@@ -15,8 +15,8 @@ ES modules only, with TypeScript declarations.
 ## Usage
 
 ```ts
-import { DisplayList } from "@rsegrest/vector-display";
-import { VectorFont } from "@rsegrest/vector-display-font";
+import { DisplayList } from "@vector-display/core";
+import { VectorFont } from "@vector-display/font";
 
 const font = VectorFont.createArcadeFont();
 const displayList = new DisplayList();

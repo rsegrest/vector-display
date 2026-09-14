@@ -1,13 +1,13 @@
-# @rsegrest/vector-display-webgl
+# @vector-display/webgl
 
-WebGL2 renderer for [**vector-display**](https://www.npmjs.com/package/@rsegrest/vector-display). It draws an entire display list in a single draw call, with anti-aliased beams, a soft glow, and optional bright endpoints like a real vector monitor.
+WebGL2 renderer for [**vector-display**](https://www.npmjs.com/package/@vector-display/core). It draws an entire display list in a single draw call, with anti-aliased beams, a soft glow, and optional bright endpoints like a real vector monitor.
 
 > **Status:** early (0.x). The API may change between minor versions.
 
 ## Install
 
 ```sh
-npm install @rsegrest/vector-display @rsegrest/vector-display-webgl
+npm install @vector-display/core @vector-display/webgl
 ```
 
 ES modules only, with TypeScript declarations. Requires a browser with WebGL2.
@@ -15,8 +15,8 @@ ES modules only, with TypeScript declarations. Requires a browser with WebGL2.
 ## Usage
 
 ```ts
-import { DisplayList, Shape } from "@rsegrest/vector-display";
-import { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
+import { DisplayList, Shape } from "@vector-display/core";
+import { WebGLVectorRenderer } from "@vector-display/webgl";
 
 const renderer = WebGLVectorRenderer.fromCanvas(canvas, { width: 1024, height: 768 });
 renderer.setLineStyle({ beamWidth: 1.5 * devicePixelRatio, glowRadius: 2 * devicePixelRatio });

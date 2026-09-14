@@ -1,4 +1,4 @@
-import { DisplayList, FLOATS_PER_BEAM_SEGMENT } from "@rsegrest/vector-display";
+import { DisplayList, FLOATS_PER_BEAM_SEGMENT } from "@vector-display/core";
 import { describe, expect, it } from "vitest";
 import { ARCADE_FONT_METRICS, ARCADE_GLYPHS, VectorFont } from "./index.js";
 

@@ -1,4 +1,4 @@
-import { DisplayList, SCREEN_SPACE_PLACEMENT } from "@rsegrest/vector-display";
+import { DisplayList, SCREEN_SPACE_PLACEMENT } from "@vector-display/core";
 import { Angle, Vector } from "es-vector-math";
 import { describe, expect, it } from "vitest";
 import {

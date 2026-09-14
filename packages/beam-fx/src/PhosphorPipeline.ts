@@ -1,5 +1,5 @@
-import type { DisplayList } from "@rsegrest/vector-display";
-import type { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
+import type { DisplayList } from "@vector-display/core";
+import type { WebGLVectorRenderer } from "@vector-display/webgl";
 import { BLUR_FRAGMENT_SHADER, COMPOSITE_FRAGMENT_SHADER, PERSISTENCE_FRAGMENT_SHADER } from "./effectShaders.js";
 import { FlickerGenerator } from "./FlickerGenerator.js";
 import { FullscreenPass } from "./FullscreenPass.js";

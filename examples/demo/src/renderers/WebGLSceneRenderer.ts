@@ -1,6 +1,6 @@
-import { DisplayList, Shape, type BeamColor } from "@rsegrest/vector-display";
-import { WebGLVectorRenderer, type LineStyle } from "@rsegrest/vector-display-webgl";
-import { PhosphorPipeline, type PhosphorSettings } from "@rsegrest/vector-display-beam-fx";
+import { DisplayList, Shape, type BeamColor } from "@vector-display/core";
+import { WebGLVectorRenderer, type LineStyle } from "@vector-display/webgl";
+import { PhosphorPipeline, type PhosphorSettings } from "@vector-display/beam-fx";
 import { ARCADE_SHAPE_POLYLINES, getShapeColor, type ArcadeShapeName } from "../arcadeShapes.js";
 import type { SceneObject, SceneRenderer, WorldSize } from "../sceneTypes.js";
 

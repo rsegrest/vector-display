@@ -1,5 +1,5 @@
 {
-  "name": "@rsegrest/vector-display",
+  "name": "@vector-display/core",
   "version": "0.1.0",
   "description": "Renderer-independent display lists of beam strokes for vector-arcade-style graphics.",
   "license": "MIT",
@@ -21,7 +21,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "@rsegrest/source": "./src/index.ts",
+      "@vector-display/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }

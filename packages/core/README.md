@@ -1,15 +1,15 @@
-# @rsegrest/vector-display
+# @vector-display/core
 
 Renderer-independent core of **vector-display**, a set of libraries for drawing graphics that look like vector arcade monitors (*Asteroids*, *Tempest*, *Battlezone*).
 
-This package holds shapes and the per-frame **display list**: the transformed line segments a renderer draws. It has no rendering code, so it also runs in Node and tests. Pair it with [`@rsegrest/vector-display-webgl`](https://www.npmjs.com/package/@rsegrest/vector-display-webgl) to draw.
+This package holds shapes and the per-frame **display list**: the transformed line segments a renderer draws. It has no rendering code, so it also runs in Node and tests. Pair it with [`@vector-display/webgl`](https://www.npmjs.com/package/@vector-display/webgl) to draw.
 
 > **Status:** early (0.x). The API may change between minor versions.
 
 ## Install
 
 ```sh
-npm install @rsegrest/vector-display
+npm install @vector-display/core
 ```
 
 ES modules only, with TypeScript declarations.
@@ -17,7 +17,7 @@ ES modules only, with TypeScript declarations.
 ## Usage
 
 ```ts
-import { DisplayList, Shape } from "@rsegrest/vector-display";
+import { DisplayList, Shape } from "@vector-display/core";
 
 // Build shapes once. Points only need x and y, so es-vector-math Vector/Point objects work too.
 const ship = Shape.fromPolyline({
@@ -49,10 +49,10 @@ displayList.addShape(bullet, { x: 540, y: 360, rotation: 0, scale: 1, intensity:
 
 ## Related packages
 
-- [`@rsegrest/vector-display-webgl`](https://www.npmjs.com/package/@rsegrest/vector-display-webgl): WebGL2 renderer
-- [`@rsegrest/vector-display-beam-fx`](https://www.npmjs.com/package/@rsegrest/vector-display-beam-fx): phosphor trails, bloom and flicker
-- [`@rsegrest/vector-display-font`](https://www.npmjs.com/package/@rsegrest/vector-display-font): Atari-style stroke font
-- [`@rsegrest/vector-display-3d`](https://www.npmjs.com/package/@rsegrest/vector-display-3d): 3D wireframes
+- [`@vector-display/webgl`](https://www.npmjs.com/package/@vector-display/webgl): WebGL2 renderer
+- [`@vector-display/beam-fx`](https://www.npmjs.com/package/@vector-display/beam-fx): phosphor trails, bloom and flicker
+- [`@vector-display/font`](https://www.npmjs.com/package/@vector-display/font): Atari-style stroke font
+- [`@vector-display/3d`](https://www.npmjs.com/package/@vector-display/3d): 3D wireframes
 
 ## License
 

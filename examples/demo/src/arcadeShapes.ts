@@ -1,4 +1,4 @@
-import type { BeamColor, Polyline } from "@rsegrest/vector-display";
+import type { BeamColor, Polyline } from "@vector-display/core";
 
 // Vertex data ported from reviving_games/asteroids-p5-ts (src/view/*Display.ts).
 export type ArcadeShapeName =

@@ -1,4 +1,4 @@
-import { NO_NEIGHBOR_SEGMENT } from "@rsegrest/vector-display";
+import { NO_NEIGHBOR_SEGMENT } from "@vector-display/core";
 import { VectorMath, type Vector } from "es-vector-math";
 import type { WireframeDefinition, WireframePolyline } from "./wireframeTypes.js";
 

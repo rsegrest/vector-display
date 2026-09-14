@@ -1,4 +1,4 @@
-import { Shape, type DisplayList } from "@rsegrest/vector-display";
+import { Shape, type DisplayList } from "@vector-display/core";
 import { ARCADE_FONT_METRICS, ARCADE_GLYPHS } from "./arcadeGlyphs.js";
 import type { FontMetrics, GlyphTable, TextAlignment, TextMeasurement, TextRun } from "./fontTypes.js";
 

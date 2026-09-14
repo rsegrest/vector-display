@@ -1,5 +1,5 @@
 {
-  "name": "@rsegrest/vector-display-beam-fx",
+  "name": "@vector-display/beam-fx",
   "version": "0.1.0",
   "description": "Phosphor persistence, bloom, and flicker effects for the vector-display WebGL renderer.",
   "license": "MIT",
@@ -21,7 +21,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "@rsegrest/source": "./src/index.ts",
+      "@vector-display/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
@@ -38,7 +38,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@rsegrest/vector-display": "0.1.0",
-    "@rsegrest/vector-display-webgl": "0.1.0"
+    "@vector-display/core": "0.1.0",
+    "@vector-display/webgl": "0.1.0"
   }
 }

@@ -14,30 +14,30 @@
 One repository (npm workspaces) that publishes several small packages. The packages depend on each other through small interfaces, not class inheritance.
 
 ```
-                    @rsegrest/vector-display   core: shapes + per-frame display list (no rendering, runs in Node)
+                    @vector-display/core   core: shapes + per-frame display list (no rendering, runs in Node)
                      ▲          ▲          ▲
-@rsegrest/vector-display-webgl  │  @rsegrest/vector-display-3d     wireframes + perspective (uses es-vector-math)
+@vector-display/webgl  │  @vector-display/3d     wireframes + perspective (uses es-vector-math)
            ▲                    │
-@rsegrest/vector-display-beam-fx   @rsegrest/vector-display-font   Atari-style stroke font + text layout
+@vector-display/beam-fx   @vector-display/font   Atari-style stroke font + text layout
 
 examples/demo                   renderer benchmark + font & 3D showcase (uses es-vector-math, motion-and-tween, p5)
 ```
 
 | Package | Status | Responsibility | Depends on |
 | --- | --- | --- | --- |
-| `@rsegrest/vector-display` | Prototype | `Shape` (static line geometry) and `DisplayList` (transformed beam segments for one frame) | nothing |
-| `@rsegrest/vector-display-webgl` | Prototype | `WebGLVectorRenderer`: uploads a display list and draws it with additive blending | core |
-| `@rsegrest/vector-display-beam-fx` | Prototype | `PhosphorPipeline`: fade the previous frame, draw beams, bloom, composite | core, webgl |
-| `@rsegrest/vector-display-font` | Prototype | `VectorFont`: Atari-style stroke glyphs and text layout into a display list | core |
-| `@rsegrest/vector-display-3d` | Prototype | `WireframeModel`, `WireframeProjector`: perspective projection with near-plane clipping, built on es-vector-math | core, es-vector-math |
-| `@rsegrest/vector-display-svg` | Planned (phase 3) | Convert SVG paths into `Shape`s, porting `SVGLoader`/`SVGFactory` from asteroids-p5-ts | core |
-| `@rsegrest/vector-display-p5` | Planned (phase 3) | Use the renderer from p5 sketches | webgl |
+| `@vector-display/core` | Prototype | `Shape` (static line geometry) and `DisplayList` (transformed beam segments for one frame) | nothing |
+| `@vector-display/webgl` | Prototype | `WebGLVectorRenderer`: uploads a display list and draws it with additive blending | core |
+| `@vector-display/beam-fx` | Prototype | `PhosphorPipeline`: fade the previous frame, draw beams, bloom, composite | core, webgl |
+| `@vector-display/font` | Prototype | `VectorFont`: Atari-style stroke glyphs and text layout into a display list | core |
+| `@vector-display/3d` | Prototype | `WireframeModel`, `WireframeProjector`: perspective projection with near-plane clipping, built on es-vector-math | core, es-vector-math |
+| `@vector-display/core-svg` | Planned (phase 3) | Convert SVG paths into `Shape`s, porting `SVGLoader`/`SVGFactory` from asteroids-p5-ts | core |
+| `@vector-display/core-p5` | Planned (phase 3) | Use the renderer from p5 sketches | webgl |
 
 **Why one repository:** early on the packages change together. With separate repos, every interface change means repeating the publish → bump → reinstall → republish cycle across repos. Workspaces link the packages locally, and each package can still be versioned and published on its own.
 
 **Why separate packages:** apps that only need the data model (such as a server or tests) don't pull in WebGL, and a game that wants a clean look doesn't ship the effect shaders.
 
-## 3. Core data model (`@rsegrest/vector-display`)
+## 3. Core data model (`@vector-display/core`)
 
 ### Coordinates
 - **World units**, origin at the top left, **y down** (the same as Canvas 2D and p5).
@@ -72,7 +72,7 @@ Keeping draw order matters for later beam effects, where the order the beam visi
 
 The display list carries each segment's neighbor points so the renderer can control how joints look (section 4).
 
-## 4. WebGL renderer (`@rsegrest/vector-display-webgl`)
+## 4. WebGL renderer (`@vector-display/webgl`)
 
 ### One draw call per frame
 1. Upload the display list's packed segment data into a single dynamic buffer (it grows by doubling and is never shrunk).
@@ -116,7 +116,7 @@ Before prototyping I suggested uploading each shape's geometry to the GPU once a
 
 If profiling a real game shows CPU transform or upload time dominating, the next step is storing shape geometry in a texture and sending per-object transforms, which shaders can read with `texelFetch`. The `DisplayList` API would stay the same.
 
-## 5. Beam effects (`@rsegrest/vector-display-beam-fx`)
+## 5. Beam effects (`@vector-display/beam-fx`)
 
 `PhosphorPipeline.renderFrame(displayList, elapsedMilliseconds)` runs these passes each frame:
 
@@ -143,7 +143,7 @@ previous phosphor ── fade by 0.5^(elapsed/halfLife) ┘                     
 - **Flicker:** smoothly interpolated random levels (`FlickerGenerator`), applied *after* tone mapping. The first version varied brightness randomly every frame before tone mapping and was barely visible: bright pixels sit in the compressed part of the tone curve, and per-frame changes at 60–120 Hz blur into a steady image. Measured on the demo, 50% depth at 5 Hz dims the displayed image to 0.67 of its peak within a second, with no frame-to-frame jump above 4.2%.
 - **Photosensitivity:** strong full-screen brightness changes around 3–30 Hz can trigger photosensitive seizures. The default depth is subtle (8%), and the demo caps the slider at 50%. Apps exposing flicker to players should keep it subtle or let players turn it off.
 
-## 5a. Vector font (`@rsegrest/vector-display-font`)
+## 5a. Vector font (`@vector-display/font`)
 
 - **Stroke glyphs, not an outline font.** The asteroids-p5-ts game draws text with Hyperspace, a filled TrueType imitation of the Asteroids lettering. Here every character is a few beam segments, so text gets the same glow, vertex highlights, phosphor trails and flicker as everything else. The glyphs are original designs in the Atari style, not copied from Hyperspace or from Atari ROM data.
 - **Grid:** 4 units wide by 6 tall (y down, baseline at 6), plus 2 units between letters and 4 between lines. Comma and semicolon descend 1 unit below the baseline.
@@ -153,7 +153,7 @@ previous phosphor ── fade by 0.5^(elapsed/halfLife) ┘                     
 - **Customizing:** `VectorFont.createArcadeFont(extraGlyphs)` replaces or adds glyphs; `VectorFont.fromDefinition({ glyphs, metrics })` builds an entirely different font.
 - **Legibility:** with default glow and bloom, text 16 world units tall or larger reads clearly. At smaller sizes, lower `endpointBrightness` and bloom, or the vertex highlights crowd together. The demo uses `endpointBrightness: 0.25` and `jointOverlap: 0.35`.
 
-## 5b. 3D wireframes (`@rsegrest/vector-display-3d`)
+## 5b. 3D wireframes (`@vector-display/3d`)
 
 - **Space:** x right, **y up**, z forward, converted to the display's y-down screen coordinates at projection.
 - **`WireframeModel.fromDefinition({ vertices, polylines })`:** vertices are es-vector-math `Vector`s; each polyline lists vertex indices and whether it closes. Edges within a polyline stay connected so joints render cleanly. `createBoxModel` and `createPyramidModel` build simple shapes.
@@ -172,7 +172,7 @@ previous phosphor ── fade by 0.5^(elapsed/halfLife) ┘                     
 | WebAssembly | **Not used** | The CPU work is simple array math where JS is already fast, and calls between JS and WebAssembly add cost. Revisit only for CPU-heavy features (physics, large SVG tessellation) |
 | WebGPU | **Later, optional** | Could become a second backend behind the same `DisplayList` interface |
 | Module format | ES modules only, TypeScript declarations | Same as es-vector-math and motion-and-tween |
-| Local development | `"@rsegrest/source"` export condition pointing at `src/index.ts` | The demo (Vite) and type checks use package sources directly, with no rebuild step. Published consumers use `dist` |
+| Local development | `"@vector-display/source"` export condition pointing at `src/index.ts` | The demo (Vite) and type checks use package sources directly, with no rebuild step. Published consumers use `dist` |
 | Tooling | TypeScript 7 project references (`tsc -b`), Vitest, Vite | Vitest and Vite handle ES modules and TypeScript natively, avoiding the Jest ES-module workarounds needed in motion-and-tween |
 
 ## 7. Prototype measurements
@@ -237,8 +237,8 @@ Use `waitsForGpu: true` for large object counts. Without it, frames can be queue
 - Tune the per-line glow radius when bloom is on (bloom already supplies the wide glow, so smaller quads reduce GPU fill cost). Needs measuring in a visible tab.
 
 **Phase 3: integrations**
-- `@rsegrest/vector-display-svg`: port `SVGLoader`/`SVGFactory` and flatten curves and arcs into segments.
-- `@rsegrest/vector-display-p5` adapter, plus examples using an existing Three.js / PixiJS WebGL context.
+- `@vector-display/core-svg`: port `SVGLoader`/`SVGFactory` and flatten curves and arcs into segments.
+- `@vector-display/core-p5` adapter, plus examples using an existing Three.js / PixiJS WebGL context.
 - Package READMEs, Changesets for versioning, CI, then publish 0.x.
 
 **Phase 4: optional**

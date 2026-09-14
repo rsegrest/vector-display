@@ -1,5 +1,5 @@
 {
-  "name": "@rsegrest/vector-display-font",
+  "name": "@vector-display/font",
   "version": "0.1.0",
   "description": "Atari-style vector stroke font and text layout for vector-display.",
   "license": "MIT",
@@ -21,7 +21,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "@rsegrest/source": "./src/index.ts",
+      "@vector-display/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
@@ -38,6 +38,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@rsegrest/vector-display": "0.1.0"
+    "@vector-display/core": "0.1.0"
   }
 }

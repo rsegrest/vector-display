@@ -8,19 +8,19 @@ Fast, general-purpose rendering of vector-arcade-style graphics (think *Asteroid
 
 | Package | What it does |
 | --- | --- |
-| [`@rsegrest/vector-display`](packages/core) | Shapes and per-frame display lists of beam segments. No rendering; runs anywhere |
-| [`@rsegrest/vector-display-webgl`](packages/webgl) | WebGL2 renderer: the whole display list in one draw call, with glow and bright endpoints |
-| [`@rsegrest/vector-display-beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer |
-| [`@rsegrest/vector-display-font`](packages/font) | Atari-style vector stroke font with text layout |
-| [`@rsegrest/vector-display-3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math |
+| [`@vector-display/core`](packages/core) | Shapes and per-frame display lists of beam segments. No rendering; runs anywhere |
+| [`@vector-display/webgl`](packages/webgl) | WebGL2 renderer: the whole display list in one draw call, with glow and bright endpoints |
+| [`@vector-display/beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer |
+| [`@vector-display/font`](packages/font) | Atari-style vector stroke font with text layout |
+| [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math |
 | [`examples/demo`](examples/demo) | Renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor) and a font & 3D showcase |
 
 ## Usage
 
 ```ts
-import { DisplayList, Shape } from "@rsegrest/vector-display";
-import { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
-import { PhosphorPipeline } from "@rsegrest/vector-display-beam-fx";
+import { DisplayList, Shape } from "@vector-display/core";
+import { WebGLVectorRenderer } from "@vector-display/webgl";
+import { PhosphorPipeline } from "@vector-display/beam-fx";
 
 const ship = Shape.fromPolyline({
   points: [{ x: 0, y: -10 }, { x: -7.5, y: 10 }, { x: -5, y: 5 }, { x: 5, y: 5 }, { x: 7.5, y: 10 }],
@@ -49,9 +49,9 @@ renderer.setLineStyle({ endpointBrightness: 0, jointOverlap: 0 }); // seamless j
 ### Text and 3D
 
 ```ts
-import { SCREEN_SPACE_PLACEMENT } from "@rsegrest/vector-display";
-import { VectorFont } from "@rsegrest/vector-display-font";
-import { DEFAULT_PERSPECTIVE_CAMERA, WireframeProjector, createBoxModel, createModelPlacement } from "@rsegrest/vector-display-3d";
+import { SCREEN_SPACE_PLACEMENT } from "@vector-display/core";
+import { VectorFont } from "@vector-display/font";
+import { DEFAULT_PERSPECTIVE_CAMERA, WireframeProjector, createBoxModel, createModelPlacement } from "@vector-display/3d";
 import { Angle, Vector } from "es-vector-math";
 
 const font = VectorFont.createArcadeFont();

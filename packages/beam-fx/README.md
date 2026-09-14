@@ -1,13 +1,13 @@
-# @rsegrest/vector-display-beam-fx
+# @vector-display/beam-fx
 
-Vector-monitor effects for [**vector-display**](https://www.npmjs.com/package/@rsegrest/vector-display): phosphor trails that fade over time, bloom, and flicker, layered on top of [`@rsegrest/vector-display-webgl`](https://www.npmjs.com/package/@rsegrest/vector-display-webgl).
+Vector-monitor effects for [**vector-display**](https://www.npmjs.com/package/@vector-display/core): phosphor trails that fade over time, bloom, and flicker, layered on top of [`@vector-display/webgl`](https://www.npmjs.com/package/@vector-display/webgl).
 
 > **Status:** early (0.x). The API may change between minor versions.
 
 ## Install
 
 ```sh
-npm install @rsegrest/vector-display @rsegrest/vector-display-webgl @rsegrest/vector-display-beam-fx
+npm install @vector-display/core @vector-display/webgl @vector-display/beam-fx
 ```
 
 ES modules only, with TypeScript declarations. Requires a browser with WebGL2.
@@ -15,8 +15,8 @@ ES modules only, with TypeScript declarations. Requires a browser with WebGL2.
 ## Usage
 
 ```ts
-import { WebGLVectorRenderer } from "@rsegrest/vector-display-webgl";
-import { PhosphorPipeline } from "@rsegrest/vector-display-beam-fx";
+import { WebGLVectorRenderer } from "@vector-display/webgl";
+import { PhosphorPipeline } from "@vector-display/beam-fx";
 
 const renderer = WebGLVectorRenderer.fromCanvas(canvas, { width: 1024, height: 768 });
 const phosphor = new PhosphorPipeline(renderer, { persistenceHalfLifeMilliseconds: 30, bloomStrength: 0.25 });

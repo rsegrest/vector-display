@@ -1,13 +1,13 @@
-# @rsegrest/vector-display-3d
+# @vector-display/3d
 
-3D wireframe models and perspective projection for [**vector-display**](https://www.npmjs.com/package/@rsegrest/vector-display), for *Battlezone*-, *Tempest*- and *Star Wars*-style graphics. The math is built on [es-vector-math](https://www.npmjs.com/package/es-vector-math).
+3D wireframe models and perspective projection for [**vector-display**](https://www.npmjs.com/package/@vector-display/core), for *Battlezone*-, *Tempest*- and *Star Wars*-style graphics. The math is built on [es-vector-math](https://www.npmjs.com/package/es-vector-math).
 
 > **Status:** early (0.x). The API may change between minor versions.
 
 ## Install
 
 ```sh
-npm install @rsegrest/vector-display @rsegrest/vector-display-3d es-vector-math
+npm install @vector-display/core @vector-display/3d es-vector-math
 ```
 
 ES modules only, with TypeScript declarations.
@@ -15,13 +15,13 @@ ES modules only, with TypeScript declarations.
 ## Usage
 
 ```ts
-import { DisplayList, SCREEN_SPACE_PLACEMENT } from "@rsegrest/vector-display";
+import { DisplayList, SCREEN_SPACE_PLACEMENT } from "@vector-display/core";
 import {
   DEFAULT_PERSPECTIVE_CAMERA,
   WireframeProjector,
   createBoxModel,
   createModelPlacement,
-} from "@rsegrest/vector-display-3d";
+} from "@vector-display/3d";
 import { Angle, Vector } from "es-vector-math";
 
 const cube = createBoxModel({ width: 100, height: 100, depth: 100 });

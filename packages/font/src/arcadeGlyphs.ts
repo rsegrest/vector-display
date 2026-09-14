@@ -1,4 +1,4 @@
-import type { Polyline } from "@rsegrest/vector-display";
+import type { Polyline } from "@vector-display/core";
 import type { FontMetrics, GlyphTable } from "./fontTypes.js";
 
 // Original stroke designs in the style of late-1970s Atari vector games: uppercase only,

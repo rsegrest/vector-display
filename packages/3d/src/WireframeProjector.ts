@@ -1,4 +1,4 @@
-import { NO_NEIGHBOR_SEGMENT, type ShapeGeometry } from "@rsegrest/vector-display";
+import { NO_NEIGHBOR_SEGMENT, type ShapeGeometry } from "@vector-display/core";
 import { Angle, VectorMath, type Vector } from "es-vector-math";
 import type { WireframeModel } from "./WireframeModel.js";
 import type { ModelPlacement3D, PerspectiveCamera } from "./wireframeTypes.js";

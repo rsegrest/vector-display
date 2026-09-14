@@ -1,4 +1,4 @@
-import type { Polyline } from "@rsegrest/vector-display";
+import type { Polyline } from "@vector-display/core";
 
 // All metrics are in glyph grid units; text size scales them so capHeight equals the requested size.
 export interface FontMetrics {

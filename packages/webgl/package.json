@@ -1,5 +1,5 @@
 {
-  "name": "@rsegrest/vector-display-webgl",
+  "name": "@vector-display/webgl",
   "version": "0.1.0",
   "description": "WebGL2 renderer that draws vector-display beam strokes in a single batched draw call.",
   "license": "MIT",
@@ -21,7 +21,7 @@
   "sideEffects": false,
   "exports": {
     ".": {
-      "@rsegrest/source": "./src/index.ts",
+      "@vector-display/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
@@ -38,6 +38,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@rsegrest/vector-display": "0.1.0"
+    "@vector-display/core": "0.1.0"
   }
 }
