@@ -92,5 +92,6 @@ export const ARCADE_GLYPHS: GlyphTable = {
     ")": [open(1, 0, 3, 2, 3, 4, 1, 6)],
     "#": [open(1, 0, 1, 6), open(3, 0, 3, 6), open(0, 2, 4, 2), open(0, 4, 4, 4)],
     "%": [open(0, 6, 4, 0), dot(0.5, 0.5), dot(3.5, 5.5)],
-    "©": [closed(1, 0, 3, 0, 4, 1, 4, 5, 3, 6, 1, 6, 0, 5, 0, 1), open(2.75, 2.25, 1.25, 2.25, 1.25, 3.75, 2.75, 3.75)],
+    // Escaped so the key still matches when a page loads this script without a UTF-8 charset.
+    "\u00A9": [closed(1, 0, 3, 0, 4, 1, 4, 5, 3, 6, 1, 6, 0, 5, 0, 1), open(2.75, 2.25, 1.25, 2.25, 1.25, 3.75, 2.75, 3.75)],
 };
