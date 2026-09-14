@@ -8,6 +8,15 @@
     "email": "rsegrest77@gmail.com",
     "url": "https://www.ricksegrest.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsegrest/vector-display.git",
+    "directory": "packages/3d"
+  },
+  "homepage": "https://github.com/rsegrest/vector-display/tree/main/packages/3d#readme",
+  "bugs": {
+    "url": "https://github.com/rsegrest/vector-display/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "exports": {
