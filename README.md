@@ -2,18 +2,23 @@
 
 Fast, general-purpose rendering of vector-arcade-style graphics (think *Asteroids*, *Tempest*, *Star Wars*) for the browser, with optional phosphor, bloom and flicker effects.
 
-> **Status:** prototype. APIs will change before the first publish. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design, measurements and roadmap.
+> **Status:** published. All five packages are on npm at `0.1.0` — install them from
+> the registry and they resolve today. The APIs are still settling (0.x), so pin a
+> version you have tested. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the
+> design, measurements and roadmap.
 
 ## Packages
 
-| Package | What it does |
-| --- | --- |
-| [`@vector-display/core`](packages/core) | Shapes and per-frame display lists of beam segments. No rendering; runs anywhere |
-| [`@vector-display/webgl`](packages/webgl) | WebGL2 renderer: the whole display list in one draw call, with glow and bright endpoints |
-| [`@vector-display/beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer |
-| [`@vector-display/font`](packages/font) | Atari-style vector stroke font with text layout |
-| [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math |
-| [`examples/demo`](examples/demo) | Renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor) and a font & 3D showcase |
+| Package | What it does | Install |
+| --- | --- | --- |
+| [`@vector-display/core`](packages/core) | Shapes and per-frame display lists of beam segments. No rendering; runs anywhere | `npm i @vector-display/core` |
+| [`@vector-display/webgl`](packages/webgl) | WebGL2 renderer: the whole display list in one draw call, with glow and bright endpoints | `npm i @vector-display/webgl` |
+| [`@vector-display/beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer | `npm i @vector-display/beam-fx` |
+| [`@vector-display/font`](packages/font) | Atari-style vector stroke font with text layout | `npm i @vector-display/font` |
+| [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math | `npm i @vector-display/3d` |
+| [`examples/demo`](examples/demo) | Renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor) and a font & 3D showcase | — |
+
+A working game built on these: [vector-asteroids](https://github.com/rsegrest/vector-asteroids).
 
 ## Usage
 

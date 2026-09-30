@@ -1,6 +1,6 @@
 # vector-display architecture
 
-**Status:** prototype (2026-09-13). Five packages and a two-page demo app work end to end; APIs are expected to change before a first publish.
+**Status:** published (2026-09-14). Five packages and a two-page demo app work end to end; all five are on npm at `0.1.0`. The APIs are still settling at 0.x, so pin a version you have tested.
 
 ## 1. Goals
 
@@ -25,11 +25,11 @@ examples/demo                   renderer benchmark + font & 3D showcase (uses es
 
 | Package | Status | Responsibility | Depends on |
 | --- | --- | --- | --- |
-| `@vector-display/core` | Prototype | `Shape` (static line geometry) and `DisplayList` (transformed beam segments for one frame) | nothing |
-| `@vector-display/webgl` | Prototype | `WebGLVectorRenderer`: uploads a display list and draws it with additive blending | core |
-| `@vector-display/beam-fx` | Prototype | `PhosphorPipeline`: fade the previous frame, draw beams, bloom, composite | core, webgl |
-| `@vector-display/font` | Prototype | `VectorFont`: Atari-style stroke glyphs and text layout into a display list | core |
-| `@vector-display/3d` | Prototype | `WireframeModel`, `WireframeProjector`: perspective projection with near-plane clipping, built on es-vector-math | core, es-vector-math |
+| `@vector-display/core` | Published `0.1.0` | `Shape` (static line geometry) and `DisplayList` (transformed beam segments for one frame) | nothing |
+| `@vector-display/webgl` | Published `0.1.0` | `WebGLVectorRenderer`: uploads a display list and draws it with additive blending | core |
+| `@vector-display/beam-fx` | Published `0.1.0` | `PhosphorPipeline`: fade the previous frame, draw beams, bloom, composite | core, webgl |
+| `@vector-display/font` | Published `0.1.0` | `VectorFont`: Atari-style stroke glyphs and text layout into a display list | core |
+| `@vector-display/3d` | Published `0.1.0` | `WireframeModel`, `WireframeProjector`: perspective projection with near-plane clipping, built on es-vector-math | core, es-vector-math |
 | `@vector-display/core-svg` | Planned (phase 3) | Convert SVG paths into `Shape`s, porting `SVGLoader`/`SVGFactory` from asteroids-p5-ts | core |
 | `@vector-display/core-p5` | Planned (phase 3) | Use the renderer from p5 sketches | webgl |
 
@@ -222,7 +222,7 @@ Use `waitsForGpu: true` for large object counts. Without it, frames can be queue
 
 ## 8. Roadmap
 
-**Phase 1: prototype (done)**
+**Phase 1: prototype (done and published)**
 - Core `Shape`/`DisplayList` with 9 unit tests
 - WebGL2 batched beam renderer with glow and endpoint dwell
 - Phosphor persistence, bloom and flicker pipeline
