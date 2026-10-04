@@ -1,0 +1,60 @@
+name: Deploy demo to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "examples/demo/**"
+      - "packages/**"
+      - ".github/workflows/deploy-demo.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Test the packages and the demo
+        run: npm test
+      - name: Build the demo
+        run: npm run build -w examples/demo
+      - name: Add a root redirect to the Life page
+        # The demo's index.html is the benchmark app; the Life page is the one worth
+        # landing on, so the project page opens there.
+        run: |
+          cat > examples/demo/dist/_redirect-root.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>vector-display demo</title>
+          <meta http-equiv="refresh" content="0; url=./life.html">
+          <a href="./life.html">Life on the Beam</a>
+          HTML
+          mv examples/demo/dist/_redirect-root.html examples/demo/dist/redirect.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: examples/demo/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

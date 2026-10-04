@@ -7,6 +7,26 @@ Fast, general-purpose rendering of vector-arcade-style graphics (think *Asteroid
 > version you have tested. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the
 > design, measurements and roadmap.
 
+## Life on the Beam
+
+Conway's Game of Life, drawn the way a vector monitor draws it. A CRT has no frame
+buffer: the beam has to *draw* every lit cell, one after another, and the phosphor
+keeps glowing after the beam moves on. So each generation is traced as a wireframe
+square per live cell, newborn cells burn white, survivors fade toward phosphor
+green, and a glider crossing the field is not two frames swapping — it is where the
+beam has been.
+
+![Life on the Beam](examples/demo/docs/life-on-the-beam.gif)
+
+| | |
+| --- | --- |
+| **[Life on the Beam](examples/demo/docs/life-on-the-beam.mp4)** | Dense field, 897 live cells, 3,588 beam segments, high persistence |
+| **[Gliders crossing the wrapped grid](examples/demo/docs/life-gliders.gif)** | Six gliders travelling forever on a torus — 30 cells, 120 segments |
+
+The grid wraps, so patterns that leave one edge return on the opposite edge and the
+display never dies against a wall. Drag on the canvas to paint live cells, or run
+`npm run dev` and open `/life.html`.
+
 ## Packages
 
 | Package | What it does | Install |
@@ -16,7 +36,7 @@ Fast, general-purpose rendering of vector-arcade-style graphics (think *Asteroid
 | [`@vector-display/beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer | `npm i @vector-display/beam-fx` |
 | [`@vector-display/font`](packages/font) | Atari-style vector stroke font with text layout | `npm i @vector-display/font` |
 | [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math | `npm i @vector-display/3d` |
-| [`examples/demo`](examples/demo) | Renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor) and a font & 3D showcase | — |
+| [`examples/demo`](examples/demo) | Renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor), a font & 3D showcase, and **Life on the Beam** | — |
 
 A working game built on these: [vector-asteroids](https://github.com/rsegrest/vector-asteroids).
 
@@ -76,7 +96,7 @@ Requires Node 24+.
 
 ```sh
 npm install
-npm run dev        # demo app (Vite): benchmark at /, font & 3D at /font-and-3d.html
+npm run dev        # demo app (Vite): benchmark at /, font & 3D at /font-and-3d.html, Life at /life.html
 npm test           # unit tests (Vitest)
 npm run build      # build all packages (tsc -b)
 npm run typecheck  # packages + demo

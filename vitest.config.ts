@@ -5,5 +5,5 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
     resolve: { conditions: ["@vector-display/source", ...defaultClientConditions] },
     ssr: { resolve: { conditions: ["@vector-display/source", ...defaultServerConditions] } },
-    test: { include: ["packages/*/src/**/*.test.ts"] },
+    test: { include: ["packages/*/src/**/*.test.ts", "examples/*/src/**/*.test.ts"] },
 });
