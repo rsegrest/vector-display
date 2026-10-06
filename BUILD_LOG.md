@@ -132,3 +132,62 @@ to eight times. A cell is never its own neighbour.
 set `base: "./"` in the demo's Vite config so one build serves both a GitHub Pages
 project page and a subfolder on the personal site. **Requires a human to set the
 repo's Pages source to "GitHub Actions".**
+
+---
+
+## 2026-10-04 — Boids on the Beam: second original demo
+
+**Why.** Life on the Beam proved the automaton case. The obvious next question is
+whether the renderer handles continuous motion, and flocking is the classic
+answer: hundreds of independent agents whose combined motion looks like one
+organism.
+
+**What.** Reynolds' flocking, drawn as beam geometry. Each boid is an arrowhead the
+beam traces in three strokes, rotated to its heading and brighter the faster it
+moves — so acceleration reads as a flash and direction is legible at a glance.
+Drawn on the same torus the Life demo uses, so a flock never piles up against an
+edge.
+
+**Architecture**, mirroring the Life split:
+
+| File | Role | Tested |
+|---|---|---|
+| `examples/demo/src/boids/boidsRules.ts` | Motion: the three forces, torus distances, speed band, seeded RNG | ✅ 27 tests |
+| `examples/demo/src/boids/boidsBeamGeometry.ts` | Boids → beam geometry: arrowheads, headings, brightness, trails | ✅ 20 tests |
+| `examples/demo/src/boids/boids.ts` | Canvas, renderer, fixed-step loop, input, debug hook | ❌ browser-only by design |
+| `examples/demo/boids.html` | The page | ❌ |
+
+**Emergence is measured, with a control.** The headline claim is not "it looks like
+a flock" but a number: **polarization** (0 = every boid heading its own way, 1 = one
+shared heading) rises from **0.02 to 0.33** over 600 steps from a standing start.
+The test suite pins the control too — with alignment and cohesion switched off the
+same seeded run stays unaligned, and the test asserts the flocked run beats the
+unflocked one by at least 0.2. Without that control the number could have been an
+artifact of the initial distribution.
+
+Two more tests guard the failure modes that make flocking demos look broken:
+separation actually holds a spacing (compared against the same run with separation
+removed, which collapses), and polarization stays above 0.5 through a long second
+run rather than drifting apart again.
+
+**Verified in a real browser**, same bar as the Life demo:
+
+| Check | Result |
+|---|---|
+| WebGL2 context | `WebGL 2.0 (OpenGL ES 3.0 Chromium)` |
+| Polarization, standing start → 600 steps | 0.0240 → **0.3318** |
+| Flock | 220 boids → 880 segments (660 arrowhead sides + 220 trails) |
+| Speed band | min 40.00, max 110.00 — clamped exactly as configured |
+| Lit pixels | 124,997 |
+| Page errors | none |
+
+**Bug found: the nav links were root-absolute and had been broken in production.**
+`index.html` and `font-and-3d.html` linked to `/font-and-3d.html` and `/`. On the
+GitHub Pages **project** page those resolve against the domain root
+(`rsegrest.github.io/...`), not the project subpath, so the existing Font & 3D
+cross-link 404'd. Vite's `base: "./"` does **not** rewrite `<a href>` — only bundled
+asset URLs. All nav links are now relative, which works on both hosts, and both pages
+gained links to the two demo pages.
+
+**Deliverables:** `examples/demo/docs/boids-on-the-beam.gif` + `.mp4`. README now has a
+**Demos** section covering both pieces with a live-links table.

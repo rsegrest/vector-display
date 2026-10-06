@@ -7,7 +7,12 @@ Fast, general-purpose rendering of vector-arcade-style graphics (think *Asteroid
 > version you have tested. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the
 > design, measurements and roadmap.
 
-## Life on the Beam
+## Demos
+
+Two original pieces, both drawn entirely as beam strokes. Neither is a recreation of an
+existing game — they are the argument that this renderer does something a canvas cannot.
+
+### Life on the Beam
 
 Conway's Game of Life, drawn the way a vector monitor draws it. A CRT has no frame
 buffer: the beam has to *draw* every lit cell, one after another, and the phosphor
@@ -18,14 +23,31 @@ beam has been.
 
 ![Life on the Beam](examples/demo/docs/life-on-the-beam.gif)
 
-| | |
-| --- | --- |
-| **[Life on the Beam](examples/demo/docs/life-on-the-beam.mp4)** | Dense field, 897 live cells, 3,588 beam segments, high persistence |
-| **[Gliders crossing the wrapped grid](examples/demo/docs/life-gliders.gif)** | Six gliders travelling forever on a torus — 30 cells, 120 segments |
-
 The grid wraps, so patterns that leave one edge return on the opposite edge and the
-display never dies against a wall. Drag on the canvas to paint live cells, or run
-`npm run dev` and open `/life.html`.
+display never dies against a wall.
+
+### Boids on the Beam
+
+Reynolds' flocking: every boid steers by three rules — do not crowd, match your
+neighbours' heading, drift toward the crowd — and the flock is what happens when all
+three apply at once. Nobody steers it. Each boid is an arrowhead the beam traces in
+three strokes, brighter the faster it moves, and the flock is drawn on a torus so it
+never piles up against an edge.
+
+![Boids on the Beam](examples/demo/docs/boids-on-the-beam.gif)
+
+The claim is measured, not asserted: the flock's **polarization** (0 = every boid
+heading its own way, 1 = one shared direction) rises from **0.02 to 0.33** over 600
+steps from a standing start. The test suite also pins the control — with alignment and
+cohesion switched off the same run stays unaligned — so the number is measuring
+flocking rather than the initial distribution.
+
+| Demo | Live | Notes |
+| --- | --- | --- |
+| **Life on the Beam** | [life.html](https://rsegrest.github.io/vector-display/life.html) | 897 cells → 3,588 beam segments; drag to paint cells |
+| **Boids on the Beam** | [boids.html](https://rsegrest.github.io/vector-display/boids.html) | 220 boids → 880 segments; live sliders for the three forces |
+| Renderer benchmark | [index.html](https://rsegrest.github.io/vector-display/) | p5.js vs WebGL2 vs WebGL2 + phosphor, with frame stats |
+| Font & 3D | [font-and-3d.html](https://rsegrest.github.io/vector-display/font-and-3d.html) | The stroke font and wireframe projection |
 
 ## Packages
 
@@ -36,7 +58,7 @@ display never dies against a wall. Drag on the canvas to paint live cells, or ru
 | [`@vector-display/beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer | `npm i @vector-display/beam-fx` |
 | [`@vector-display/font`](packages/font) | Atari-style vector stroke font with text layout | `npm i @vector-display/font` |
 | [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math | `npm i @vector-display/3d` |
-| [`examples/demo`](examples/demo) | Renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor), a font & 3D showcase, and **Life on the Beam** | — |
+| [`examples/demo`](examples/demo) | The demos: **Life on the Beam**, **Boids on the Beam**, a renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor), and a font & 3D showcase | — |
 
 A working game built on these: [vector-asteroids](https://github.com/rsegrest/vector-asteroids).
 
@@ -96,7 +118,8 @@ Requires Node 24+.
 
 ```sh
 npm install
-npm run dev        # demo app (Vite): benchmark at /, font & 3D at /font-and-3d.html, Life at /life.html
+npm run dev        # demo app (Vite): benchmark at /, font & 3D at /font-and-3d.html,
+                   # Life at /life.html, Boids at /boids.html
 npm test           # unit tests (Vitest)
 npm run build      # build all packages (tsc -b)
 npm run typecheck  # packages + demo

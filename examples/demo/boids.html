@@ -3,19 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Life on the Beam — vector-display</title>
+    <title>Boids on the Beam — vector-display</title>
     <style>
       :root {
         color-scheme: dark;
-        --panel: #0d100e;
-        --rule: #1e2a22;
-        --phosphor: #7dffa8;
-        --dim: #6f8a79;
+        --rule: #17241d;
+        --phosphor: #8dffc0;
+        --dim: #6d8a79;
       }
       * { box-sizing: border-box; }
-      /* Both html and body need a definite height: a percentage min-height on body
-         does not resolve against an html that only has min-height, and the whole
-         flex chain then collapses to content height instead of the viewport. */
+      /* html and body both need a definite height, or the flex column below sizes to
+         content and the canvas collapses to its default 300x150. */
       html, body {
         height: 100%;
         margin: 0;
@@ -24,37 +22,31 @@
         font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
       }
       body { display: flex; flex-direction: column; overflow: hidden; }
-      header {
-        padding: 18px 20px 10px;
-        border-bottom: 1px solid var(--rule);
-        flex: 0 0 auto;
-      }
+      header { padding: 18px 20px 10px; border-bottom: 1px solid var(--rule); flex: 0 0 auto; }
       nav { margin-bottom: 8px; }
       nav a { color: var(--dim); }
       h1 { margin: 0 0 6px; font-size: 15px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; }
-      header p { margin: 0; color: var(--dim); max-width: 74ch; }
+      header p { margin: 0; color: var(--dim); max-width: 76ch; }
       main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
       #stage { flex: 1; display: grid; place-items: center; padding: 18px; min-height: 0; }
       canvas {
         display: block;
         background: #000;
         border-radius: 10px;
-        box-shadow: 0 0 0 1px #16201a, 0 0 60px rgba(60, 255, 130, 0.07) inset;
-        cursor: crosshair;
-        touch-action: none;
+        box-shadow: 0 0 0 1px #16201a, 0 0 60px rgba(60, 255, 150, 0.07) inset;
       }
       footer {
         border-top: 1px solid var(--rule);
         padding: 12px 20px 20px;
         display: flex;
         flex-wrap: wrap;
-        gap: 18px 28px;
+        gap: 16px 26px;
         align-items: flex-end;
         flex: 0 0 auto;
       }
       label { display: flex; flex-direction: column; gap: 4px; color: var(--dim); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
       label output { color: var(--phosphor); letter-spacing: 0; }
-      input[type="range"] { width: 150px; accent-color: #43d17a; }
+      input[type="range"] { width: 132px; accent-color: #45d68a; }
       .buttons { display: flex; gap: 8px; }
       button {
         font: inherit;
@@ -62,25 +54,25 @@
         background: rgba(40, 90, 60, 0.22);
         border: 1px solid rgba(90, 200, 140, 0.4);
         border-radius: 7px;
-        padding: 8px 14px;
+        padding: 8px 13px;
         cursor: pointer;
       }
       button:hover { background: rgba(90, 200, 140, 0.22); }
       #readout { margin-left: auto; text-align: right; color: var(--dim); }
       #readout strong { color: var(--phosphor); font-weight: 600; }
-      a { color: var(--phosphor); }
     </style>
   </head>
   <body>
     <header>
       <nav><a href="./">Renderer benchmark</a> · <a href="font-and-3d.html">Font &amp; 3D</a> · <a href="life.html">Life on the Beam</a> · <a href="boids.html">Boids on the Beam</a></nav>
-      <h1>Life on the Beam</h1>
+      <h1>Boids on the Beam</h1>
       <p>
-        Conway's Game of Life drawn the way a vector monitor draws: the beam traces a
-        wireframe square around every live cell, one after another, and the phosphor keeps
-        glowing after it moves on. Newborn cells burn white; cells that survive fade toward
-        phosphor green. A glider travelling across the field is not two frames swapping —
-        it is where the beam has been.
+        Flocking, drawn as beam geometry. Each boid is an arrowhead the beam traces in
+        three strokes, pointed along its heading and brighter the faster it moves. Three
+        simple rules — do not crowd, match your neighbours, drift toward the crowd —
+        produce a flock nobody is steering. Watch the phosphor: with persistence turned
+        up the trails merge and the flock reads as one flowing organism rather than a set
+        of separate shapes.
       </p>
     </header>
     <main>
@@ -89,27 +81,34 @@
       </div>
       <footer>
         <div class="buttons">
-          <button id="toggle">Pause</button>
-          <button id="randomize">Randomize</button>
-          <button id="gliders">Launch gliders</button>
-          <button id="clear">Clear</button>
+          <button id="scatter">Scatter</button>
+          <button id="pause">Pause</button>
         </div>
-        <label>Speed <output id="speed-value">8 gen/s</output>
-          <input id="speed" type="range" min="1" max="30" step="1" value="8" />
+        <label>Flock size <output id="count-value">220</output>
+          <input id="count" type="range" min="20" max="600" step="10" value="220" />
         </label>
-        <label>Persistence <output id="persistence-value">80 ms</output>
-          <input id="persistence" type="range" min="5" max="400" step="5" value="80" />
+        <label>Separation <output id="separation-value">90</output>
+          <input id="separation" type="range" min="0" max="180" step="5" value="90" />
         </label>
-        <label>Bloom <output id="bloom-value">1.4</output>
-          <input id="bloom" type="range" min="0" max="3" step="0.1" value="1.4" />
+        <label>Alignment <output id="alignment-value">60</output>
+          <input id="alignment" type="range" min="0" max="180" step="5" value="60" />
+        </label>
+        <label>Cohesion <output id="cohesion-value">45</output>
+          <input id="cohesion" type="range" min="0" max="180" step="5" value="45" />
+        </label>
+        <label>Persistence <output id="persistence-value">120 ms</output>
+          <input id="persistence" type="range" min="5" max="400" step="5" value="120" />
+        </label>
+        <label>Trails <output id="trail-value">14</output>
+          <input id="trail" type="range" min="0" max="40" step="1" value="14" />
         </label>
         <div id="readout">
-          <div>generation <strong id="generation">0</strong></div>
-          <div>population <strong id="population">0</strong></div>
+          <div>boids <strong id="boids">0</strong></div>
+          <div>alignment <strong id="polarization">0.00</strong></div>
           <div>segments <strong id="segments">0</strong></div>
         </div>
       </footer>
     </main>
-    <script type="module" src="/src/life/life.ts"></script>
+    <script type="module" src="/src/boids/boids.ts"></script>
   </body>
 </html>

@@ -15,6 +15,7 @@ export default defineConfig({
                 benchmark: "index.html",
                 fontAnd3d: "font-and-3d.html",
                 life: "life.html",
+                boids: "boids.html",
             },
         },
     },
