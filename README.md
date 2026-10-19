@@ -60,8 +60,6 @@ flocking rather than the initial distribution.
 | [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math | `npm i @vector-display/3d` |
 | [`examples/demo`](examples/demo) | The demos: **Life on the Beam**, **Boids on the Beam**, a renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor), and a font & 3D showcase | — |
 
-A working game built on these: [vector-asteroids](https://github.com/rsegrest/vector-asteroids).
-
 ## Usage
 
 ```ts
