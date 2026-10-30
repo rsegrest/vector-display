@@ -191,3 +191,51 @@ gained links to the two demo pages.
 
 **Deliverables:** `examples/demo/docs/boids-on-the-beam.gif` + `.mp4`. README now has a
 **Demos** section covering both pieces with a live-links table.
+
+---
+
+## 2026-10-30 — `@vector-display/svg` 0.1.0 and `@vector-display/3d` 0.2.0 (meshes)
+
+**Context.** The roadmap's next projects (a vector-display website, a solar-system home
+page, a first-person 3D arcade) need two things the library lacked: SVG line art, and 3D
+models from files with hidden lines. The meshes demo in vector-demos already had OBJ
+import, silhouette and crease edges and depth-buffer hidden lines, at demo level; that is
+now in the library, generalized to scenes of many models. Branch `svg-and-meshes`.
+
+### Verified working
+
+| Step | Command | Result |
+|---|---|---|
+| Build | `npm run build` (`tsc -b`) | clean |
+| Tests | `npm test` | **159 passed / 10 files** (19 new for svg, 11 new for meshes) |
+| Typecheck | `npm run typecheck` | clean (packages + demo) |
+| Pack | `npm pack --dry-run -w packages/svg -w packages/3d` | svg 0.1.0, 43 files, 37.6 kB; 3d 0.2.0, 73 files, 50.9 kB; LICENSE in, tests out |
+
+### What was checked beyond the tests
+
+- **SVG from Inkscape:** a drawing with text, a rounded rectangle, a filled circle and a
+  smooth quadratic path, its text converted by `inkscape --actions=...object-to-path...`,
+  read by `readSvg` and drawn: the rotated letters (counters of O and R included), the
+  rounded border, the circle and the curve all as in the source.
+- **glTF from Blender (4.0.2, through its MCP server):** a box with a cone out of its
+  front (Blender's −Y) and a sphere on its right (+X), exported as `.glb`, read with
+  `readGltf`, drawn by `MeshScene` with hidden lines: the cone points at the default
+  camera and the sphere is on the screen's right (not mirrored), back edges are gone.
+- **Same projection:** a test draws a tetrahedron through `MeshScene` and through
+  `WireframeProjector` with the same camera and placement and compares the segments.
+
+### Decisions
+
+- **Package name `svg`, not the planned `core-svg`** (ARCHITECTURE.md): it reads like
+  `font` and `3d`. Written new rather than ported from asteroids-p5-ts's SVGLoader.
+- **Axes:** OBJ and glTF are right-handed (z toward the viewer); this library's space
+  has z away. The readers negate z and reverse winding (`fromRightHanded`), so models
+  are not mirrored and their front faces the default camera.
+- **Two-sided surfaces** when the eye is inside a model's bounding sphere (or the mesh
+  is open): a closed model seen from inside (a room) has every face turned away, and
+  the back-face shortcut would hide all its walls. Found by a test of a viewer inside a box.
+
+### Open items
+
+- Publishing: `npm publish -w packages/svg -w packages/3d` (the owner).
+- vector-demos' meshes demo can switch to the library once 0.2.0 is published.

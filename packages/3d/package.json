@@ -1,7 +1,7 @@
 {
   "name": "@vector-display/3d",
-  "version": "0.1.0",
-  "description": "Wireframe models and perspective projection for vector-display, built on es-vector-math.",
+  "version": "0.2.0",
+  "description": "Wireframe models, perspective projection, and OBJ / glTF meshes drawn as line drawings with hidden lines removed, for vector-display.",
   "license": "MIT",
   "author": {
     "name": "Rick Segrest",

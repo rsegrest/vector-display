@@ -8,6 +8,7 @@
     "packages/beam-fx",
     "packages/font",
     "packages/3d",
+    "packages/svg",
     "examples/demo"
   ],
   "scripts": {

@@ -2,8 +2,8 @@
 
 Fast, general-purpose rendering of vector-arcade-style graphics (think *Asteroids*, *Tempest*, *Star Wars*) for the browser, with optional phosphor, bloom and flicker effects.
 
-> **Status:** published. All five packages are on npm at `0.1.0` — install them from
-> the registry and they resolve today. The APIs are still settling (0.x), so pin a
+> **Status:** published. All six packages are on npm (`@vector-display/3d` at `0.2.0`,
+> the rest at `0.1.0`) — install them from the registry and they resolve today. The APIs are still settling (0.x), so pin a
 > version you have tested. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the
 > design, measurements and roadmap.
 
@@ -57,7 +57,8 @@ flocking rather than the initial distribution.
 | [`@vector-display/webgl`](packages/webgl) | WebGL2 renderer: the whole display list in one draw call, with glow and bright endpoints | `npm i @vector-display/webgl` |
 | [`@vector-display/beam-fx`](packages/beam-fx) | Phosphor persistence, bloom and flicker on top of the WebGL renderer | `npm i @vector-display/beam-fx` |
 | [`@vector-display/font`](packages/font) | Atari-style vector stroke font with text layout | `npm i @vector-display/font` |
-| [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math | `npm i @vector-display/3d` |
+| [`@vector-display/3d`](packages/3d) | Wireframe models and perspective projection built on es-vector-math; OBJ and glTF meshes drawn as line drawings with hidden lines removed | `npm i @vector-display/3d` |
+| [`@vector-display/svg`](packages/svg) | SVG drawings (paths, shapes, transforms, colors) read into outlines, curves flattened; no DOM needed | `npm i @vector-display/svg` |
 | [`examples/demo`](examples/demo) | The demos: **Life on the Beam**, **Boids on the Beam**, a renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor), and a font & 3D showcase | — |
 
 A working game built on these: [vector-asteroids](https://github.com/rsegrest/vector-asteroids).

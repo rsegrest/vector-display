@@ -30,7 +30,7 @@ examples/demo                   renderer benchmark + font & 3D showcase (uses es
 | `@vector-display/beam-fx` | Published `0.1.0` | `PhosphorPipeline`: fade the previous frame, draw beams, bloom, composite | core, webgl |
 | `@vector-display/font` | Published `0.1.0` | `VectorFont`: Atari-style stroke glyphs and text layout into a display list | core |
 | `@vector-display/3d` | Published `0.1.0` | `WireframeModel`, `WireframeProjector`: perspective projection with near-plane clipping, built on es-vector-math | core, es-vector-math |
-| `@vector-display/core-svg` | Planned (phase 3) | Convert SVG paths into `Shape`s, porting `SVGLoader`/`SVGFactory` from asteroids-p5-ts | core |
+| `@vector-display/svg` | Built (0.1.0) | SVG drawings (paths, shapes, transforms, colors) read into outlines and `Shape`s, curves and arcs flattened within a tolerance; no DOM | core |
 | `@vector-display/core-p5` | Planned (phase 3) | Use the renderer from p5 sketches | webgl |
 
 **Why one repository:** early on the packages change together. With separate repos, every interface change means repeating the publish → bump → reinstall → republish cycle across repos. Workspaces link the packages locally, and each package can still be versioned and published on its own.
@@ -230,14 +230,14 @@ Use `waitsForGpu: true` for large object counts. Without it, frames can be queue
 
 **Phase 2: make it usable for a real game**
 - ~~Vector font~~ (prototype done, section 5a).
-- ~~3D wireframes with es-vector-math projection~~ (prototype done, section 5b). Next: depth-based intensity (dimmer when farther away) and hidden-line options.
+- ~~3D wireframes with es-vector-math projection~~ (prototype done, section 5b). ~~Hidden-line options~~ (0.2.0: OBJ and glTF meshes, silhouette and crease edges, hidden lines by a shared depth buffer, culling, a first-person camera). Next: depth-based intensity (dimmer when farther away).
 - Per-segment intensity controls, including an option where shorter segments draw brighter (the beam spends more time on them), and per-shape line styles so text and game objects can use different vertex highlights.
 - Dev overlay with GPU timer queries (when available) and live FPS.
 - Browser-based tests for the WebGL packages (Vitest browser mode or Playwright), plus screenshot checks of shader output.
 - Tune the per-line glow radius when bloom is on (bloom already supplies the wide glow, so smaller quads reduce GPU fill cost). Needs measuring in a visible tab.
 
 **Phase 3: integrations**
-- `@vector-display/core-svg`: port `SVGLoader`/`SVGFactory` and flatten curves and arcs into segments.
+- ~~`@vector-display/core-svg`~~ built as `@vector-display/svg` (0.1.0), written new rather than ported: curves and arcs flattened within a tolerance, transforms, `<use>`, colors and opacity.
 - `@vector-display/core-p5` adapter, plus examples using an existing Three.js / PixiJS WebGL context.
 - Package READMEs, Changesets for versioning, CI, then publish 0.x.
 
