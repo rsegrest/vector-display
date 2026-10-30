@@ -61,8 +61,6 @@ flocking rather than the initial distribution.
 | [`@vector-display/svg`](packages/svg) | SVG drawings (paths, shapes, transforms, colors) read into outlines, curves flattened; no DOM needed | `npm i @vector-display/svg` |
 | [`examples/demo`](examples/demo) | The demos: **Life on the Beam**, **Boids on the Beam**, a renderer benchmark (p5.js vs WebGL2 vs WebGL2 with phosphor), and a font & 3D showcase | — |
 
-A working game built on these: [vector-asteroids](https://github.com/rsegrest/vector-asteroids).
-
 ## Usage
 
 ```ts
